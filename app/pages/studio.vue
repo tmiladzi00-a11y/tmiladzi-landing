@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { PROCESS } from '~/content/process'
+/* Which steps belong to which phase, by 1-based step number. */
+const PHASES = [
+  { label: 'Before the shoot', from: 1, to: 3 },
+  { label: 'On location', from: 4, to: 5 },
+  { label: 'After the shoot', from: 6, to: 9 },
+]
 import { SITE } from '~/content/site'
 useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by Tsolofelo Miladzi and has been in professional production since 2018. A Copperbelt studio with national reach.' })
 </script>
@@ -62,10 +68,7 @@ useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by
 
     <PageBand id="pipeline" labelledby="pipe-h">
       <SectionHead id="pipe-h" eyebrow="How a job runs" title="The pipeline, in full." />
-      <div class="split split--even">
-        <ProcessList :steps="PROCESS.slice(0, 5)" />
-        <ProcessList :steps="PROCESS.slice(5)" :offset="5" />
-      </div>
+      <Pipeline :steps="PROCESS" :phases="PHASES" />
     </PageBand>
   </div>
 </template>

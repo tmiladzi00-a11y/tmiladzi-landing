@@ -15,7 +15,7 @@ useSeoMeta({ title: 'Films', description: 'Documentary, corporate film and testi
       </p>
       <div class="row">
         <BaseButton variant="primary" to="/brief" arrow>Commission a film</BaseButton>
-        <BaseButton to="/capabilities">Delivery specification</BaseButton>
+        <BaseButton to="/capabilities#delivery-spec">Delivery specification</BaseButton>
       </div>
     </PageBand>
 

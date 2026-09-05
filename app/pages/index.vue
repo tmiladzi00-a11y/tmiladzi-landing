@@ -142,7 +142,10 @@ const stats: [string, string][] = [
 
     <section class="tagline-strip">
       <div class="wrap tagline-strip__in">
-        <p class="kicker">Have a shoot coming up? Send the brief and we will tell you honestly whether we are the right studio for it.</p>
+        <div class="tagline-strip__copy">
+          <p class="kicker">Have a shoot coming up?</p>
+          <p class="tagline-strip__sub">Send the brief and we will tell you honestly whether we are the right studio for it.</p>
+        </div>
         <BaseButton variant="primary" to="/brief" arrow>Start a brief</BaseButton>
       </div>
     </section>
@@ -168,4 +171,12 @@ const stats: [string, string][] = [
   background: var(--tm-sys-elevation-1-bg); padding: var(--tm-sys-space-5) 0;
 }
 .tagline-strip__in { display: flex; flex-wrap: wrap; gap: var(--tm-sys-space-5); align-items: center; justify-content: space-between; }
+/* The question carries the display weight; the promise under it sits in
+   the body face, lighter and quieter, so the two read as a lead and a
+   follow-through rather than one four-line block. */
+.tagline-strip__copy { display: grid; gap: var(--tm-sys-space-2); max-width: 46ch; }
+.tagline-strip__sub {
+  font-family: var(--tm-sys-type-body-family); font-size: var(--tm-sys-type-lede-size); font-weight: 300;
+  line-height: 1.5; color: var(--tm-sys-color-on-surface-variant); margin: 0; max-width: 40ch; text-wrap: pretty;
+}
 </style>

@@ -2,31 +2,49 @@
 import { CAPS } from '~/content/capabilities'
 useSeoMeta({ title: 'Capabilities', description: 'What we do, what you receive, and the technical standard it arrives at. Photography, film, documentary and retainers for organisations in Zambia.' })
 
-const anchors: [string, string][] = [
-  ['Photography, half day (1–4 hrs)', 'from 7,500'],
-  ['Photography, full day (4–8 hrs)', 'from 9,250'],
-  ['Photo + video, half day', 'from 27,500'],
-  ['Photo + video, full day', 'from 34,250'],
-  ['Drone coverage, per day', 'from 7,000'],
-  ['Testimonial film, per piece', 'from 3,000'],
-  ['Documentary, full pipeline', 'from 44,500'],
-  ['Travel, within Copperbelt', '2,500 / day'],
-  ['Travel, outside Copperbelt', '12,000 / day'],
+import type { Rate } from '~/components/RateList.vue'
+/* The same nine anchors as before, grouped so the list scans by service. */
+const anchors: { k: string; rows: Rate[] }[] = [
+  { k: 'Photography', rows: [
+    { name: 'Photography', qual: 'Half day · 1–4 hrs', price: '7,500', from: true },
+    { name: 'Photography', qual: 'Full day · 4–8 hrs', price: '9,250', from: true },
+  ] },
+  { k: 'Photo + video', rows: [
+    { name: 'Photo + video', qual: 'Half day', price: '27,500', from: true },
+    { name: 'Photo + video', qual: 'Full day', price: '34,250', from: true },
+  ] },
+  { k: 'Film', rows: [
+    { name: 'Testimonial film', qual: 'Per piece', price: '3,000', from: true },
+    { name: 'Documentary', qual: 'Full pipeline', price: '44,500', from: true },
+  ] },
+  { k: 'Day rates', rows: [
+    { name: 'Drone coverage', qual: 'Per day', price: '7,000', from: true },
+    { name: 'Travel', qual: 'Within Copperbelt', price: '2,500', unit: '/ day' },
+    { name: 'Travel', qual: 'Outside Copperbelt', price: '12,000', unit: '/ day' },
+  ] },
 ]
-const spec: [string, string][] = [
-  ['Video resolution', '4K minimum, all cameras'],
-  ['Interview setup', 'Two-camera with lighting; single camera in the field where 4K is maintained'],
-  ['Primary audio', 'Lavalier, with shotgun as backup channel'],
-  ['Master codec', 'ProRes 422 HQ (.mov)'],
-  ['Audio files', 'WAV, 24-bit / 48 kHz'],
-  ['Dialogue levels', 'Peaking −12 to −6 dBFS'],
-  ['Framing', 'Rule of thirds on interviews; centre frame for direct-to-camera'],
-  ['Lighting', 'Moderate three-point; naturalistic, not dramatic, unless briefed'],
-  ['Stills', 'Full-resolution JPEG and RAW on request; unlimited edited selects'],
-  ['Folder structure', 'Separate interview and b-roll directories, shoot-day dated'],
-  ['Transfer', "Client gallery, Google Drive or physical drive — client's choice"],
-  ['Watermarks', 'None applied to client masters'],
-  ['Archive', 'Held and backed up for at least 12 months post-delivery; re-supply on request'],
+/* Thirteen lines of spec, in the order a job runs: how it is shot, what the
+   masters are, how they reach the client. */
+const spec: { k: string; lead: string; rows: [string, string][] }[] = [
+  { k: 'Capture', lead: 'How it is shot', rows: [
+    ['Video resolution', '4K minimum, all cameras'],
+    ['Interview setup', 'Two-camera with lighting; single camera in the field where 4K is maintained'],
+    ['Primary audio', 'Lavalier, with shotgun as backup channel'],
+    ['Framing', 'Rule of thirds on interviews; centre frame for direct-to-camera'],
+    ['Lighting', 'Moderate three-point; naturalistic, not dramatic, unless briefed'],
+  ] },
+  { k: 'Masters', lead: 'What the files are', rows: [
+    ['Master codec', 'ProRes 422 HQ (.mov)'],
+    ['Audio files', 'WAV, 24-bit / 48 kHz'],
+    ['Dialogue levels', 'Peaking −12 to −6 dBFS'],
+    ['Stills', 'Full-resolution JPEG and RAW on request; unlimited edited selects'],
+    ['Watermarks', 'None applied to client masters'],
+  ] },
+  { k: 'Handover', lead: 'How you receive it', rows: [
+    ['Folder structure', 'Separate interview and b-roll directories, shoot-day dated'],
+    ['Transfer', "Client gallery, Google Drive or physical drive — client's choice"],
+    ['Archive', 'Held and backed up for at least 12 months post-delivery; re-supply on request'],
+  ] },
 ]
 </script>
 
@@ -59,20 +77,20 @@ const spec: [string, string][] = [
           <SurfaceCard k="Indicative starting points" tone="mal">
             <p class="mt-0">Every project is quoted from a brief. These are
               the anchors, in Zambian Kwacha, before travel and scope.</p>
-            <SpecTable class="mt-5" :rows="anchors" bare />
+            <RateList class="mt-5" :groups="anchors" />
             <p class="note mt-4">Multi-day and package engagements are discounted. Quotations are valid 30 days.</p>
           </SurfaceCard>
         </div>
       </div>
     </PageBand>
 
-    <PageBand labelledby="spec-h">
+    <PageBand id="delivery-spec" labelledby="spec-h">
       <SectionHead id="spec-h" eyebrow="Delivery specification" copper title="Written down, so procurement does not have to ask.">
         Our standard technical delivery. Where a client has its own spec — as
         global mining and media clients usually do — we shoot to theirs and confirm it in
         the proposal.
       </SectionHead>
-      <SpecTable :rows="spec" caption="Standard technical delivery" />
+      <SpecGrid :groups="spec" label="Standard technical delivery" />
     </PageBand>
 
     <PageBand dark>

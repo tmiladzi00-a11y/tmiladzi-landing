@@ -15,7 +15,14 @@ defineProps<{ stats: [value: string, label: string][] }>()
 
 <style scoped>
 .strip { position: relative; z-index: 2; border-top: 1px solid var(--tm-sys-color-outline); background: rgba(11, 15, 13, .6); }
-.strip__in { display: flex; flex-wrap: wrap; gap: var(--tm-sys-space-5) var(--tm-sys-space-7); padding-top: var(--tm-sys-space-4); padding-bottom: var(--tm-sys-space-4); align-items: center; margin-top: 0; margin-bottom: 0; }
+.strip__in {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--tm-sys-space-5) var(--tm-sys-space-6);
+  padding-top: var(--tm-sys-space-4); padding-bottom: var(--tm-sys-space-4);
+  align-items: center; margin-top: 0; margin-bottom: 0;
+}
+.stat { min-width: 0; }
 dd { margin: 0; }
 .stat b {
   display: block; font-family: var(--tm-sys-type-display-family); font-variation-settings: var(--tm-sys-type-stat-axes);

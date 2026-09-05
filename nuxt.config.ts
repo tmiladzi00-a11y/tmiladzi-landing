@@ -14,6 +14,13 @@ export default defineNuxtConfig({
   // round trip per component on a slow link.
   features: { inlineStyles: true },
   runtimeConfig: {
+    // Server-only. Set as environment variables on the Cloudflare Pages
+    // project (NUXT_RESEND_API_KEY, NUXT_MAIL_TO, NUXT_MAIL_FROM). Without a
+    // key the send endpoint answers "not configured" and the forms fall back
+    // to copy-and-WhatsApp, exactly as before.
+    resendApiKey: '',
+    mailTo: 'tmiladzi@gmail.com',
+    mailFrom: 'Tmiladzi site <site@tmiladzi.com>',
     public: {
       // Google Apps Script /exec URL. Empty means preview mode: sample
       // availability, a visible notice, and the WhatsApp fallback.
@@ -44,6 +51,14 @@ export default defineNuxtConfig({
   // One stylesheet, not one per shared component: a single render-blocking
   // round trip on a slow link instead of ten.
   vite: { build: { cssCodeSplit: false } },
-  nitro: { prerender: { crawlLinks: true, routes: ['/'] } },
+  // Cloudflare Pages: every page is prerendered to static HTML at build time
+  // and served as files; the small worker that ships alongside handles
+  // /api/* (form delivery) and anything not prerendered. Nitro writes the
+  // wrangler.json and enables Node compatibility itself.
+  nitro: {
+    preset: 'cloudflare-pages',
+    cloudflare: { deployConfig: true, nodeCompat: true },
+    prerender: { crawlLinks: true, routes: ['/', '/sitemap.xml'], ignore: ['/api'] },
+  },
   experimental: { defaults: { nuxtLink: { prefetch: true } }, viewTransition: true },
 })

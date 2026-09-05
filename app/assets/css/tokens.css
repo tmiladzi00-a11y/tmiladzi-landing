@@ -51,7 +51,9 @@
   /* ---------- reference · shape, layout ---------- */
   --tm-ref-radius:      2px;
   --tm-ref-radius-pill: 999px;
-  --tm-ref-maxw:        1280px;
+  /* 1280 in the prototype. Raised to 1440 so large monitors carry content
+     rather than margin; prose stays capped in ch, so lines do not lengthen. */
+  --tm-ref-maxw:        1440px;
   --tm-ref-rail:        56px;
   --tm-ref-touch:       48px;
 
@@ -161,6 +163,8 @@
   --tm-sys-shape-corner:      var(--tm-ref-radius);
   --tm-sys-shape-corner-pill: var(--tm-ref-radius-pill);
   --tm-sys-layout-maxw:       var(--tm-ref-maxw);
+  /* image grids and hero plates may run wider than text; text never does */
+  --tm-sys-layout-bleed:      1760px;
   --tm-sys-layout-rail:       var(--tm-ref-rail);
   --tm-sys-layout-touch:      var(--tm-ref-touch);
   --tm-sys-layout-header-h:   62px;

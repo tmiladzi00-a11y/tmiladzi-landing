@@ -29,7 +29,7 @@ export const space = [0, 4, 8, 12, 16, 24, 32, 48, 64, 96, 140] as const
 
 export const radius = { base: 2, pill: 999 } as const
 
-export const layout = { maxw: 1280, rail: 56, touch: 48, headerH: 62 } as const
+export const layout = { maxw: 1440, bleed: 1760, rail: 56, touch: 48, headerH: 62 } as const
 
 /** Breakpoints used by the prototype, in px. Min-width queries. */
 export const breakpoint = {

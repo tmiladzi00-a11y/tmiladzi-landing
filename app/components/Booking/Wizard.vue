@@ -34,6 +34,9 @@ const formErr = ref('')
 const termsBad = ref(false)
 const sendErr = ref('')
 const sending = ref(false)
+/* true when the request reached the studio (Apps Script or the site's mailer);
+   false means the visitor has to send the text themselves */
+const delivered = ref(false)
 const data = ref<ReturnType<typeof collect> | null>(null)
 const copyLabel = ref('Copy request')
 const stepsEl = ref<HTMLElement | null>(null)
@@ -183,9 +186,20 @@ async function send() {
   sendErr.value = ''
   sending.value = true
   try {
-    const j = await api.submit(d)
-    if (j.ref) d.ref = j.ref
+    if (api.api) {
+      const j = await api.submit(d)
+      if (j.ref) d.ref = j.ref
+      delivered.value = true
+    } else {
+      const r = await $fetch<{ ok: boolean; sent?: boolean; reason?: string }>('/api/send', {
+        method: 'POST',
+        body: { kind: 'booking', subject: `Booking request ${d.ref} — ${d.service}, ${d.dateLabel}`, text: bookingText(d), replyTo: d.email, name: d.name },
+      })
+      delivered.value = !!(r.ok && r.sent)
+      if (!delivered.value) sendErr.value = (r.reason === 'not-configured' ? 'Automatic sending is not switched on yet. ' : 'We could not send that automatically. ') + 'Copy the request below and WhatsApp it to +260 974 901 668 — we will pick it up straight away.'
+    }
   } catch {
+    delivered.value = false
     sendErr.value = 'We could not send that automatically. Copy the request below and WhatsApp it to +260 974 901 668 — we will pick it up straight away.'
   } finally {
     sending.value = false
@@ -367,12 +381,12 @@ const addonIntro = computed(() => service.value?.addons.length
         <section v-else-if="step === 6" key="6" class="bstep" aria-labelledby="s6-h">
           <div class="confirmed">
             <Eyebrow>Request sent</Eyebrow>
-            <h2 id="s6-h" class="display h2 confirmed__h">Your date is pencilled in.</h2>
+            <h2 id="s6-h" class="display h2 confirmed__h">{{ delivered ? 'Your date is pencilled in.' : 'Your request is ready to send.' }}</h2>
             <p class="lede mt-4">{{ confirmLine }}</p>
             <p v-if="sendErr" class="err" role="alert">{{ sendErr }}</p>
             <div class="refno">{{ data?.ref }}</div>
-            <p class="muted bstep__p">Keep that reference. We will reply to your email
-              within one working day with confirmation and the deposit details. If you would rather
+            <p class="muted bstep__p">Keep that reference. <template v-if="delivered">It has reached us, and we will reply to your email
+              within one working day with confirmation and the deposit details.</template><template v-else>Once it reaches us we reply within one working day with confirmation and the deposit details.</template> If you would rather
               talk it through now, WhatsApp is the fastest route.</p>
             <div class="bactions">
               <BaseButton variant="copper" :href="waHref" external arrow>Message on WhatsApp</BaseButton>
@@ -383,6 +397,14 @@ const addonIntro = computed(() => service.value?.addons.length
           </div>
         </section>
         </Transition>
+      </div>
+
+      <!-- phones: the rail is below the steps, so the price travels in a bar -->
+      <div v-if="service && step < 6" class="sumbar" aria-hidden="true">
+        <span class="sumbar__k">Total</span>
+        <b class="num sumbar__v">{{ quote.totalText.value }}</b>
+        <span class="sumbar__k sumbar__dep">Deposit</span>
+        <b class="num sumbar__v sumbar__depv">{{ quote.depositText.value.replace(/\s+\(.*\)$/, '') }}</b>
       </div>
 
       <aside>
@@ -413,6 +435,18 @@ const addonIntro = computed(() => service.value?.addons.length
 </template>
 
 <style scoped>
+.sumbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: grid; grid-template-columns: auto 1fr auto auto; gap: 4px 12px; align-items: baseline;
+  padding: 10px var(--tm-sys-space-5) calc(10px + env(safe-area-inset-bottom));
+  background: var(--tm-sys-elevation-5-bg); backdrop-filter: var(--tm-sys-elevation-5-filter); -webkit-backdrop-filter: var(--tm-sys-elevation-5-filter);
+  border-top: 1px solid var(--tm-sys-color-outline);
+}
+.sumbar__k { font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-xs); letter-spacing: .14em; text-transform: uppercase; color: var(--tm-sys-color-on-surface-faint); }
+.sumbar__v { font-family: var(--tm-sys-type-display-family); font-variation-settings: var(--tm-sys-type-price-axes); font-size: 20px; letter-spacing: -.02em; }
+.sumbar__depv { color: var(--tm-sys-color-secondary-hover); font-size: 16px; }
+@media (min-width: 900px) { .sumbar { display: none; } }
+@media (max-width: 899px) { .bactions:last-child { padding-bottom: 64px; } }
 .preview-note {
   display: inline-flex; align-items: center; gap: 8px; font-family: var(--tm-sys-type-data-family); font-size: 10.5px;
   letter-spacing: .1em; text-transform: uppercase; color: var(--tm-sys-color-secondary-hover);

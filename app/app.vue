@@ -10,6 +10,17 @@ const pageTransition = import.meta.client && !('startViewTransition' in document
 const config = useRuntimeConfig()
 const base = config.public.siteUrl || SITE.url
 
+useSeoMeta({
+  ogImage: `${base}/og.jpg`,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: 'Tmiladzi Media. We film the work that actually changes something.',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Tmiladzi Media',
+  twitterDescription: SITE.description,
+  twitterImage: `${base}/og.jpg`,
+})
+
 useHead({
   titleTemplate: (t) => (t && t !== 'Tmiladzi Media' ? `${t} — Tmiladzi Media` : 'Tmiladzi Media'),
   script: [
@@ -33,7 +44,8 @@ useHead({
             '@type': 'LocalBusiness',
             '@id': `${base}/#studio`,
             name: SITE.name,
-            image: `${base}/og.png`,
+            image: `${base}/og.jpg`,
+            logo: `${base}/og.jpg`,
             url: base,
             telephone: SITE.phone,
             email: SITE.email,

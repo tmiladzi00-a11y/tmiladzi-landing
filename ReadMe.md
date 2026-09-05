@@ -11,7 +11,8 @@ bun install          # npm's resolver currently chokes on this tree; bun works
 npm run dev          # http://localhost:3000
 npm run test         # pricing engine
 npm run typecheck
-npm run generate     # static build in .output/public
+npm run build        # static pages + edge worker in dist/ (Cloudflare Pages preset)
+npm run og           # regenerate public/og.jpg
 ```
 
 On this machine Node's happy-eyeballs autoselection hangs on the network;
@@ -22,8 +23,9 @@ if `fetch` inside node tools times out, export
 
 Hosting is Cloudflare Pages, deployed by GitHub Actions from
 `.github/workflows/deploy.yml`. A push to `master` runs the tests and
-typecheck, builds the static site with `nuxt generate`, and publishes
-`.output/public` as the production deployment. Pull requests against
+typecheck, builds with `nuxt build` on the Cloudflare Pages preset (every page
+prerendered to static HTML, plus a small worker for `/api`), and publishes
+`dist/` as the production deployment. Pull requests against
 `master` get a preview deployment on their branch alias. The workflow can
 also be run by hand from the Actions tab.
 
@@ -35,6 +37,18 @@ Repository settings it needs:
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | The account that owns the Pages project |
 | Secret | `NUXT_PUBLIC_BOOKING_API` | Apps Script `/exec` URL; leave unset for preview mode |
 | Variable | `CLOUDFLARE_PAGES_PROJECT` | Pages project name; defaults to `tmiladzi` if unset |
+
+Form delivery runs in the worker and needs three environment variables set
+on the Pages project itself (Cloudflare dashboard, the project, Settings,
+Variables and Secrets, for Production and Preview):
+
+| Name | Value |
+|---|---|
+| `NUXT_RESEND_API_KEY` | A [Resend](https://resend.com) API key. Free tier covers this site many times over. Verify `tmiladzi.com` as a sending domain there first. |
+| `NUXT_MAIL_TO` | Where briefs and bookings land. Defaults to `tmiladzi@gmail.com`. |
+| `NUXT_MAIL_FROM` | Sender, e.g. `Tmiladzi site <site@tmiladzi.com>`. Must be on the verified domain. |
+
+Without the key, both forms fall back to copy-and-WhatsApp exactly as before.
 
 Create the Pages project once in the Cloudflare dashboard (Workers & Pages,
 Create, Pages, "Direct Upload") with that name, then attach the custom
@@ -61,7 +75,7 @@ mirrored in the Apps Script, which recomputes every total itself.
 | `app/components/` | Every component, scoped styles bound to tokens |
 | `app/pages/` | One file per route |
 | `tests/` | Vitest |
-| `scripts/serve-static.mjs` | Gzip static server for `.output/public` on port 3211, for Lighthouse |
+| `scripts/serve-static.mjs` | Gzip static server for `dist/` on port 3211, for Lighthouse |
 | `scripts/font-fallbacks.mjs` | Regenerates the metric-matched fallback `@font-face` rules in `fonts.css` |
 | `scripts/motion-check.mjs` | Drives every interaction (filter, case-study morph, wizard, calendar, rail) against the dev server on 3210 and reports console errors |
 | `scripts/shoot.mjs` | Screenshots every route at 1440 and 390 next to the prototype, and walks the wizard. `node scripts/shoot.mjs <outdir>` with the dev server on port 3210 |

@@ -3,11 +3,29 @@ import { NAV } from '~/content/site'
 
 const open = ref(false)
 const route = useRoute()
+const burger = ref<HTMLButtonElement | null>(null)
+const header = ref<HTMLElement | null>(null)
 watch(() => route.fullPath, () => { open.value = false })
+
+/* Keyboard and pointer manners for the drawer: Escape closes it and hands
+   focus back to the button; a click anywhere outside the header closes it;
+   opening moves focus to the first link so keyboard users are inside it. */
+function close(refocus = false) {
+  if (!open.value) return
+  open.value = false
+  if (refocus) nextTick(() => burger.value?.focus())
+}
+function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close(true) }
+function onDocClick(e: MouseEvent) { if (open.value && header.value && !header.value.contains(e.target as Node)) close() }
+watch(open, (v) => {
+  if (v) nextTick(() => header.value?.querySelector<HTMLAnchorElement>('#drawer a')?.focus())
+})
+onMounted(() => { document.addEventListener('keydown', onKey); document.addEventListener('click', onDocClick) })
+onBeforeUnmount(() => { document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick) })
 </script>
 
 <template>
-  <header class="nav">
+  <header ref="header" class="nav">
     <div class="nav__in">
       <NuxtLink class="brand" to="/">
         <span class="brand__mark">TMILADZI</span>
@@ -18,6 +36,7 @@ watch(() => route.fullPath, () => { open.value = false })
         <BaseButton class="nav__cta" to="/brief" variant="primary" size="sm">Start a brief</BaseButton>
       </nav>
       <button
+        ref="burger"
         class="nav__burger"
         :class="{ 'is-open': open }"
         type="button"

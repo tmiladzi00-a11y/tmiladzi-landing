@@ -1,5 +1,6 @@
-# Push to master: test, typecheck, build the static site, deploy it to
-# Cloudflare Pages as production. Pull requests get a preview deployment on
+# Push to master: test, typecheck, build (static pages plus the small edge
+# worker for /api), deploy to Cloudflare Pages as production. Nitro writes
+# dist/_worker.js/wrangler.json, so wrangler runs with --cwd dist. Pull requests get a preview deployment on
 # their branch alias. Secrets and variables the repo needs:
 #   secrets.CLOUDFLARE_API_TOKEN     token with "Cloudflare Pages: Edit"
 #   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
@@ -47,8 +48,8 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Build static site
-        run: bun run generate
+      - name: Build
+        run: bun run build
         env:
           NUXT_PUBLIC_BOOKING_API: ${{ secrets.NUXT_PUBLIC_BOOKING_API }}
           NUXT_PUBLIC_SITE_URL: https://tmiladzi.com
@@ -56,7 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: site
-          path: .output/public
+          path: dist
           retention-days: 7
 
   deploy:
@@ -75,7 +76,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: site
-          path: .output/public
+          path: dist
 
       - uses: actions/setup-node@v4
         with:
@@ -100,7 +101,7 @@ jobs:
           MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title || 'manual run' }}
         run: |
           set -o pipefail
-          npx --yes wrangler@4 pages deploy .output/public \
+          npx --yes wrangler@4 --cwd dist pages deploy \
             --project-name="$PROJECT" \
             --branch="$BRANCH" \
             --commit-hash="${{ github.event.pull_request.head.sha || github.sha }}" \

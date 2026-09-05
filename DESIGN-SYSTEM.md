@@ -39,7 +39,7 @@ error      #C05A4A (border) · #E08878 (text on dark)
 on-mal     #04140D   on-cop #180A02
 space      4 8 12 16 24 32 48 64 96 140
 radius     2px · pill 999px
-maxw       1280px · rail 56px · touch 48px
+maxw       1440px (prototype 1280; raised for large monitors) · bleed 1760px · rail 56px · touch 48px
 ```
 
 ### System colour roles
@@ -294,8 +294,8 @@ shown in lifted greyscale instead, with its true colours on hover. `w`/`h` are t
 CLS-free box; `height` is the rendered size, tuned per mark so a heavy
 wordmark and a small seal carry the same weight. An entry without a logo
 renders its name in the display face, so the roster degrades one client at
-a time. Raster logos go through `NuxtImg` and come out as WebP at build
-time (the static provider writes them under `/_ipx/`); SVGs pass through. Every mark is a client's trademark: add one only where that client
+a time. Raster logos are stored as WebP in `public/logos` (converted once with
+Pillow); SVGs as they are. No runtime image pipeline is involved. Every mark is a client's trademark: add one only where that client
 has agreed to appear.
 
 **LogoWall** — flat uppercase display-face list for a short run of names.
@@ -326,6 +326,32 @@ colour.
 renders a plain-text brief in a `<pre>` with copy-to-clipboard (and a
 selection fallback) and an edit path back.
 
+**Lightbox** — a native `<dialog>` for a project's frames: focus trapped by
+the element, Escape closes, arrow keys and swipe move, a counter reads
+"3 of 6", and the frame is sized to the viewport by its ratio. Body scroll is
+locked while open. Rendered client-only.
+
+**FrameGallery** — the frames from a shoot at their own ratios, packed in
+CSS columns (1/2/3 at 600 and 1000), each a button that opens the lightbox
+at its index. Frame tags name what was shot.
+
+**VideoEmbed** — a poster plate that becomes a YouTube (no-cookie) or Vimeo
+player on click; nothing third-party loads before that. Accepts a full URL
+or a bare ID. Without an `embed` it renders the plate alone.
+
+**FrameStrip** — the home page's "Recent frames" as a horizontal scroll-snap
+strip of 520px plates with slug lines, paging buttons for mouse users,
+native scroll for everyone else.
+
+**PackageTable** — the three private-client packages side by side plus an
+add-on price matrix, both derived from `SERVICES`, so the marketing page and
+the booking engine cannot disagree.
+
+**Bleed** — `.bleed` in `base.css` lets an image grid or hero plate run to
+`--tm-sys-layout-bleed` (1760px) while the text container stays at 1440px
+and prose is capped in ch. Used on the
+Work grid, case-study hero and gallery, and the showreel.
+
 **Booking wizard** — `BookingWizard` orchestrates six steps with
 `BookingStepIndicator` (an `<ol>` with `aria-current="step"`),
 `BookingServicePicker` (radio cards in a `<fieldset>`),
@@ -339,6 +365,16 @@ announces each step. The terms checkbox gates submission; the accepted
 version strings and a fingerprint of the rendered `/terms` text travel with
 the request. The page wraps the wizard in `ClientOnly` and carries a
 `<noscript>` fallback.
+
+## 8a. Forms and delivery
+
+Both forms post to `/api/send` (`server/api/send.post.ts`), an edge
+function that relays through Resend when `NUXT_RESEND_API_KEY` is set and
+otherwise answers "not configured". The brief shows a "Brief sent"
+confirmation when delivery succeeds and the copy-and-WhatsApp panel when it
+does not; the wizard does the same and words its confirmation accordingly.
+A hidden honeypot field drops bot submissions silently. The brief is laid
+out as six numbered `<fieldset>`s because the copy promises six questions.
 
 ## 9. Pricing engine
 
@@ -363,7 +399,7 @@ Component styles are inlined into each prerendered page
 navigation (`cssCodeSplit: false`), and a Nitro plugin
 (`server/plugins/async-css.ts`) turns that stylesheet's link into a
 non-blocking preload with a `<noscript>` copy. First paint depends on the
-HTML alone. `scripts/serve-static.mjs` serves `.output/public` with gzip
+HTML alone. `scripts/serve-static.mjs` serves `dist/` with gzip
 for a fair Lighthouse run; `scripts/shoot.mjs` screenshots every route
 beside the prototype.
 

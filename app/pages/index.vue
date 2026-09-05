@@ -13,7 +13,8 @@ useSeoMeta({
   ogUrl: SITE.url + '/',
 })
 
-const featured = PROJECTS.filter((p) => p.featured)
+const stripEl = ref<{ page: (dir: -1 | 1) => void } | null>(null)
+const strip = [...PROJECTS.filter((p) => p.featured), ...PROJECTS.filter((p) => !p.featured)].slice(0, 6)
 const stats: [string, string][] = [
   ['8', 'Years in production'],
   ['3&nbsp;+&nbsp;8', 'Core team + crew at scale'],
@@ -72,36 +73,51 @@ const stats: [string, string][] = [
 
     <PageBand dark labelledby="work-h">
       <SectionHead id="work-h" eyebrow="Selected work" title="Recent frames" wide>
-        <template #aside><BaseButton to="/work" size="sm" arrow>All projects</BaseButton></template>
+        <template #aside>
+          <div class="work__actions">
+            <StripNav label="Scroll recent frames" @page="stripEl?.page($event)" />
+            <BaseButton to="/work" size="sm" arrow>All projects</BaseButton>
+          </div>
+        </template>
       </SectionHead>
-      <WorkGrid :projects="featured" label="Selected projects" />
+      <FrameStrip ref="stripEl" :projects="strip" />
     </PageBand>
 
     <PageBand labelledby="make-h">
-      <SectionHead id="make-h" eyebrow="What we make" title="Six things, done properly.">
-        Every engagement is scoped from a brief, quoted in writing, and delivered
-        against a named spec. No surprises on either side.
-      </SectionHead>
-      <ul class="grid g3 caps">
-        <CapabilityCard v-for="c in CAPS" :key="c.k" :cap="c" />
-      </ul>
+      <div class="split">
+        <div>
+          <Eyebrow>What we make</Eyebrow>
+          <h2 id="make-h" class="display h2">Six things, done properly.</h2>
+          <p class="lede mt-5">Every engagement is scoped from a brief, quoted in writing, and delivered
+            against a named spec. No surprises on either side.</p>
+          <BaseButton to="/capabilities" arrow class="mt-4">What each one includes</BaseButton>
+        </div>
+        <ul class="caplist">
+          <li v-for="c in CAPS" :key="c.k"><span class="caplist__k">{{ c.k }}</span><span class="caplist__t">{{ c.t }}</span></li>
+        </ul>
+      </div>
     </PageBand>
 
     <PageBand dark labelledby="process-h">
       <div class="split">
-        <div class="process__lead">
+        <div>
           <Eyebrow>Process</Eyebrow>
           <h2 id="process-h" class="display h2">Nine steps from first call to archive.</h2>
           <p class="lede mt-5">
             The same pipeline runs on a one-hour portrait session and a five-day mine
             documentary. It is what makes a large production predictable.
           </p>
+          <BaseButton to="/studio#pipeline" arrow class="mt-4">The pipeline, in full</BaseButton>
+        </div>
+        <div>
+          <ol class="stepnames">
+            <li v-for="(s, i) in PROCESS" :key="s[0]"><span class="stepnames__n">{{ String(i + 1).padStart(2, '0') }}</span>{{ s[0] }}</li>
+          </ol>
           <SurfaceCard k="Payment terms" tone="mal" class="mt-6">
             <p class="fg mt-0">Invoices are issued on delivery with payment expected
               15–20 days from issue. Established accounts run on 21- or 30-day terms by agreement.</p>
           </SurfaceCard>
         </div>
-        <ProcessList :steps="PROCESS" />
       </div>
     </PageBand>
 
@@ -134,11 +150,16 @@ const stats: [string, string][] = [
 </template>
 
 <style scoped>
+.work__actions { display: flex; align-items: center; gap: var(--tm-sys-space-3); }
 .diff__cards { gap: var(--tm-sys-space-4); }
-/* nine steps run far taller than their introduction: the introduction
-   travels with the reader instead of leaving the column empty */
-@media (min-width: 900px) { .process__lead { position: sticky; top: 88px; } }
-.caps { list-style: none; padding: 0; margin: 0; }
+.caplist { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--tm-sys-color-outline-variant); }
+.caplist li { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--tm-sys-space-4); padding: 14px 0; border-bottom: 1px solid var(--tm-sys-color-outline-variant); align-items: baseline; }
+.caplist__k { font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-xs); letter-spacing: .16em; text-transform: uppercase; color: var(--tm-sys-color-on-surface-faint); }
+.caplist__t { font-family: var(--tm-sys-type-body-family); font-weight: 650; font-size: 17px; color: var(--tm-sys-color-on-surface); }
+.stepnames { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr; border-top: 1px solid var(--tm-sys-color-outline-variant); }
+@media (min-width: 600px) { .stepnames { grid-template-columns: 1fr 1fr; column-gap: var(--tm-sys-space-6); } }
+.stepnames li { display: grid; grid-template-columns: auto 1fr; gap: var(--tm-sys-space-4); align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--tm-sys-color-outline-variant); font-family: var(--tm-sys-type-body-family); font-weight: 650; font-size: 17px; }
+.stepnames__n { font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-sm); letter-spacing: .1em; color: var(--tm-sys-color-primary); }
 .lanes { display: grid; gap: var(--tm-sys-space-5); grid-template-columns: 1fr; }
 @media (min-width: 860px) { .lanes { grid-template-columns: repeat(2, 1fr); } }
 .lanes :deep(p.muted) { margin: 0; }

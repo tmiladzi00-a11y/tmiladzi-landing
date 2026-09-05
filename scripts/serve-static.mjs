@@ -1,11 +1,13 @@
-// Serves .output/public with gzip and long cache headers, the way real
-// hosting would, so Lighthouse numbers mean something. node scripts/serve-static.mjs [port]
+// Serves the built site (dist/, the Cloudflare Pages output) with gzip and
+// long cache headers, the way real hosting would, so Lighthouse numbers mean
+// something. Static pages only; /api needs `wrangler pages dev dist`.
+// node scripts/serve-static.mjs [port] [dir]
 import { createServer } from 'node:http'
 import { createReadStream, statSync, existsSync } from 'node:fs'
 import { join, extname } from 'node:path'
 import { createGzip } from 'node:zlib'
 
-const root = join(process.cwd(), '.output/public')
+const root = join(process.cwd(), process.argv[3] || 'dist')
 const port = Number(process.argv[2] || 3211)
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain', '.xml': 'application/xml' }
 

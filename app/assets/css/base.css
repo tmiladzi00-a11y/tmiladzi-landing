@@ -6,6 +6,8 @@
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; color-scheme: dark; }
+/* Anchored targets clear the sticky header. */
+[id] { scroll-margin-top: var(--tm-sys-layout-header-h); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -113,6 +115,13 @@ p { margin: 0 0 1em; max-width: 66ch; }
 .split--even { grid-template-columns: 1fr; }
 @media (min-width: 900px) { .split--even { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+.bleed {
+  width: min(100vw, var(--tm-sys-layout-bleed));
+  margin-left: calc(50% - min(50vw, var(--tm-sys-layout-bleed) / 2));
+  padding: 0 var(--tm-sys-space-5);
+}
+@media (min-width: 900px) { .bleed { padding: 0 var(--tm-sys-space-7); } }
+
 .hr { height: 1px; background: var(--tm-sys-color-outline-variant); border: 0; margin: var(--tm-sys-space-7) 0; }
 
 /* spacing helpers: the only utilities in the build */
@@ -179,3 +188,24 @@ p { margin: 0 0 1em; max-width: 66ch; }
 p, li, dd { text-wrap: pretty; }
 :focus-visible { animation: focus-in var(--tm-sys-motion-duration-short-1) var(--tm-sys-motion-easing-decelerate); }
 @keyframes focus-in { from { outline-offset: 7px; } to { outline-offset: 3px; } }
+
+/* ---------- print ---------- */
+/* Procurement prints the terms. Light ground, black type, no chrome, the
+   clause numbers and links intact. */
+@media print {
+  :root { --tm-sys-color-surface: #fff; --tm-sys-color-surface-sunken: #fff; --tm-sys-color-surface-raised: #fff; --tm-sys-color-surface-raised-2: #fff;
+    --tm-sys-color-on-surface: #000; --tm-sys-color-on-surface-variant: #111; --tm-sys-color-on-surface-faint: #444;
+    --tm-sys-color-outline: #999; --tm-sys-color-outline-variant: #ccc; --tm-sys-color-primary: #000; --tm-sys-color-primary-hover: #000; --tm-sys-color-primary-container: #999; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  header, footer, .sheet-rail, aside, .skip, .nav, .row, .btn, .plate { display: none !important; }
+  .split { grid-template-columns: 1fr !important; }
+  .band { padding: 0 0 18pt !important; border: 0 !important; }
+  .legal { max-width: none; }
+  .legal h2 { break-after: avoid; margin-top: 18pt; }
+  .legal p, .legal li, .legal td, .legal th { color: #000 !important; }
+  .legal a { color: #000; border: 0; text-decoration: underline; }
+  .legal a[href^="http"]::after, .legal a[href^="mailto"]::after { content: " (" attr(href) ")"; font-size: 9pt; }
+  .tablewrap { border-color: #999; break-inside: avoid; }
+  .display { color: #000; }
+  @page { margin: 18mm; }
+}

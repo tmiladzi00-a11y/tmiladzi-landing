@@ -60,7 +60,7 @@ useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by
       </ul>
     </PageBand>
 
-    <PageBand labelledby="pipe-h">
+    <PageBand id="pipeline" labelledby="pipe-h">
       <SectionHead id="pipe-h" eyebrow="How a job runs" title="The pipeline, in full." />
       <div class="split split--even">
         <ProcessList :steps="PROCESS.slice(0, 5)" />

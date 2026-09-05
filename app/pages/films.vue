@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FILMS } from '~/content/films'
+import { SITE } from '~/content/site'
 useSeoMeta({ title: 'Films', description: 'Documentary, corporate film and testimony. Shot 4K minimum, two-camera on interviews, cut for the room it will actually be played in.' })
 </script>
 
@@ -19,14 +20,16 @@ useSeoMeta({ title: 'Films', description: 'Documentary, corporate film and testi
     </PageBand>
 
     <PageBand tight flush>
-      <PlateFrame ratio="21-9" pa="#1F6B4E" pb="#7A4420" tag="Showreel · 2026" title="Tmiladzi Media — Reel 2026" sub="2:40 · 4K · Embed slot: YouTube / Vimeo" sizes="(min-width: 1280px) 1184px, 100vw" />
+      <div class="bleed">
+        <VideoEmbed :embed="SITE.showreel" ratio="21-9" pa="#1F6B4E" pb="#7A4420" tag="Showreel · 2026" title="Tmiladzi Media — Reel 2026" :sub="SITE.showreel ? '2:40 · 4K · Press play' : '2:40 · 4K · Reel publishing soon'" sizes="(min-width: 1760px) 1660px, 100vw" />
+      </div>
     </PageBand>
 
     <PageBand dark labelledby="films-h">
       <SectionHead id="films-h" eyebrow="Recent films" title="In the cut" />
       <ul class="grid g2 films">
         <li v-for="f in FILMS" :key="f.title">
-          <PlateFrame ratio="16-9" :pa="f.pa" :pb="f.pb" :tag="f.note" :title="f.title" :sub="f.client" sizes="(min-width: 720px) 50vw, 100vw" />
+          <VideoEmbed :embed="f.embed" ratio="16-9" :pa="f.pa" :pb="f.pb" :tag="f.embed ? 'Film · press play' : f.note" :title="f.title" :sub="f.client" sizes="(min-width: 720px) 50vw, 100vw" />
           <div class="mono mt-3">{{ f.meta }}</div>
         </li>
       </ul>

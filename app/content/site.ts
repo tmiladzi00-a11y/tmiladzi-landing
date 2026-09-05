@@ -19,6 +19,8 @@ export const SITE = {
   country: 'Zambia',
   tpin: '1017396972',
   founded: '2018',
+  /** YouTube or Vimeo URL for the showreel. Empty until the reel is published. */
+  showreel: '',
   legalVersion: 'Version 1.0 · 3 September 2026',
 } as const
 

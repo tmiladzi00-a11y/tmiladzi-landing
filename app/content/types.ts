@@ -27,6 +27,18 @@ export interface Project {
   /** Real photography, when it lands. Absent means the plate renders as a slot. */
   image?: string
   imageAlt?: string
+  /** Frames from the shoot, shown in the case study gallery and lightbox. */
+  frames?: Frame[]
+}
+
+export interface Frame {
+  /** What was shot: "Interview · two-camera", "Aerial · site". Truthful to the job. */
+  tag: string
+  ratio: PlateRatio
+  pa?: string
+  pb?: string
+  image?: string
+  alt?: string
 }
 
 export interface Film {
@@ -36,7 +48,7 @@ export interface Film {
   pa: string
   pb: string
   note: string
-  /** YouTube or Vimeo embed URL, when available. */
+  /** YouTube or Vimeo URL (or bare ID), when available. */
   embed?: string
 }
 

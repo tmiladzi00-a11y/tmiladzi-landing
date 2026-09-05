@@ -65,22 +65,47 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event_name == 'push' && 'production' || 'preview' }}
-      url: ${{ steps.publish.outputs.deployment-url }}
+      url: ${{ steps.publish.outputs.url }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'tmiladzi' }}
+      BRANCH: ${{ github.event_name == 'push' && 'master' || github.head_ref }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: site
           path: .output/public
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check secrets are present
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::CLOUDFLARE_API_TOKEN secret is not set"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::CLOUDFLARE_ACCOUNT_ID secret is not set"; exit 1; }
+
+      - name: Create the Pages project if it does not exist yet
+        run: |
+          if npx --yes wrangler@4 pages project list 2>/dev/null | grep -Eq "(^|[│| ])$PROJECT([│| ]|$)"; then
+            echo "Project $PROJECT exists"
+          else
+            npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=master
+          fi
+
       - name: Publish
         id: publish
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: >-
-            pages deploy .output/public
-            --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'tmiladzi-landing' }}
-            --branch=${{ github.event_name == 'push' && 'master' || github.head_ref }}
-            --commit-hash=${{ github.event.pull_request.head.sha || github.sha }}
-            --commit-dirty=false
+        env:
+          MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title || 'manual run' }}
+        run: |
+          set -o pipefail
+          npx --yes wrangler@4 pages deploy .output/public \
+            --project-name="$PROJECT" \
+            --branch="$BRANCH" \
+            --commit-hash="${{ github.event.pull_request.head.sha || github.sha }}" \
+            --commit-message="$(printf '%s' "$MESSAGE" | head -1 | cut -c1-120)" \
+            | tee deploy.log
+          url=$(grep -Eo 'https://[a-z0-9.-]+\.pages\.dev' deploy.log | tail -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url"

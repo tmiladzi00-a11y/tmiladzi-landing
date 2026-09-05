@@ -33,13 +33,13 @@ onBeforeUnmount(() => io?.disconnect())
 <style scoped>
 .toc-wrap {
   border: 1px solid var(--tm-sys-color-outline); border-radius: var(--tm-sys-shape-corner);
-  background: var(--tm-sys-elevation-2-bg); padding: var(--tm-sys-space-5); position: sticky; top: 88px;
+  background: var(--tm-sys-elevation-2-bg); padding: var(--tm-sys-space-5);
 }
 .toc__k {
   font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-xs); letter-spacing: .16em;
   text-transform: uppercase; color: var(--tm-sys-color-on-surface-faint); margin-bottom: var(--tm-sys-space-3); display: block;
 }
-.toc { display: grid; gap: 2px; margin-top: var(--tm-sys-space-3); max-height: 60vh; overflow: auto; }
+.toc { display: grid; gap: 2px; margin-top: var(--tm-sys-space-3); max-height: 50vh; overflow: auto; }
 .toc a {
   --_layer: var(--tm-sys-color-on-surface);
   font-family: var(--tm-sys-type-data-family); font-size: 11.5px; color: var(--tm-sys-color-on-surface-faint); text-decoration: none;

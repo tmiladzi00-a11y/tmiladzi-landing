@@ -34,7 +34,7 @@ withDefaults(defineProps<{
             </p>
           </template>
         </div>
-        <aside>
+        <aside class="legal__aside">
           <LegalToc :items="toc" :label="tocLabel" />
           <slot name="aside" />
         </aside>
@@ -45,4 +45,15 @@ withDefaults(defineProps<{
 
 <style scoped>
 .legal__lede { margin-top: var(--tm-sys-space-5); max-width: 62ch; }
+/* The rail (contents plus the side card) rides along with the reader. The
+   grid row is as tall as the clauses, so a sticky aside has the whole
+   column to travel; if the rail is taller than the viewport it scrolls
+   inside itself rather than being cut off. */
+@media (min-width: 900px) {
+  .legal__aside {
+    position: sticky; top: calc(var(--tm-sys-layout-header-h) + var(--tm-sys-space-5)); align-self: start;
+    max-height: calc(100dvh - var(--tm-sys-layout-header-h) - var(--tm-sys-space-6)); overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--tm-sys-color-outline) transparent;
+  }
+}
 </style>

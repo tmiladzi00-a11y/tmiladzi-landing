@@ -96,6 +96,24 @@ jobs:
             npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=main
           fi
 
+      - name: Make sure the production branch is main
+        # The project was first created with master as its production branch,
+        # so deploys from main landed as previews. Fixes it once; no-op after.
+        if: github.event_name == 'push'
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT"
+          current=$(curl -sS "$api" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin).get("result",{}).get("production_branch",""))')
+          if [ "$current" = "main" ]; then
+            echo "Production branch is already main"
+          else
+            echo "Production branch is '$current'; setting it to main"
+            curl -sS -X PATCH "$api" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" --data '{"production_branch":"main"}' \
+              | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d); sys.exit(0 if d.get("success") else 1)' \
+              || { echo "::error::Could not set the production branch to main; change it in the Pages dashboard"; exit 1; }
+          fi
+
       - name: Publish
         id: publish
         env:

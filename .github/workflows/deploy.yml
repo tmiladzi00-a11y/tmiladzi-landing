@@ -1,7 +1,8 @@
-# Push to master: test, typecheck, build (static pages plus the small edge
+# Push to main: test, typecheck, build (static pages plus the small edge
 # worker for /api), deploy to Cloudflare Pages as production. Nitro writes
-# dist/_worker.js/wrangler.json, so wrangler runs with --cwd dist. Pull requests get a preview deployment on
-# their branch alias. Secrets and variables the repo needs:
+# dist/_worker.js/wrangler.json (with pages_build_output_dir: ".."), so
+# wrangler runs with --cwd dist/_worker.js and uploads dist. Pull requests
+# get a preview deployment on their branch alias. Secrets and variables the repo needs:
 #   secrets.CLOUDFLARE_API_TOKEN     token with "Cloudflare Pages: Edit"
 #   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
 #   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
@@ -71,7 +72,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'tmiladzi' }}
-      BRANCH: ${{ github.event_name == 'push' && 'master' || github.head_ref }}
+      BRANCH: ${{ github.event_name == 'push' && 'main' || github.head_ref }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -92,7 +93,7 @@ jobs:
           if npx --yes wrangler@4 pages project list 2>/dev/null | grep -Eq "(^|[│| ])$PROJECT([│| ]|$)"; then
             echo "Project $PROJECT exists"
           else
-            npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=master
+            npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=main
           fi
 
       - name: Publish
@@ -101,7 +102,7 @@ jobs:
           MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title || 'manual run' }}
         run: |
           set -o pipefail
-          npx --yes wrangler@4 --cwd dist pages deploy \
+          npx --yes wrangler@4 --cwd dist/_worker.js pages deploy \
             --project-name="$PROJECT" \
             --branch="$BRANCH" \
             --commit-hash="${{ github.event.pull_request.head.sha || github.sha }}" \

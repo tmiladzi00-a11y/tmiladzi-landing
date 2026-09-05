@@ -1,0 +1,86 @@
+# Push to master: test, typecheck, build the static site, deploy it to
+# Cloudflare Pages as production. Pull requests get a preview deployment on
+# their branch alias. Secrets and variables the repo needs:
+#   secrets.CLOUDFLARE_API_TOKEN     token with "Cloudflare Pages: Edit"
+#   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
+#   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
+#   secrets.NUXT_PUBLIC_BOOKING_API  Apps Script /exec URL; blank = preview mode
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Tests
+        run: bun run test
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build static site
+        run: bun run generate
+        env:
+          NUXT_PUBLIC_BOOKING_API: ${{ secrets.NUXT_PUBLIC_BOOKING_API }}
+          NUXT_PUBLIC_SITE_URL: https://tmiladzi.com
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: .output/public
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      url: ${{ steps.publish.outputs.deployment-url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: .output/public
+
+      - name: Publish
+        id: publish
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy .output/public
+            --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'tmiladzi-landing' }}
+            --branch=${{ github.event_name == 'push' && 'master' || github.head_ref }}
+            --commit-hash=${{ github.event.pull_request.head.sha || github.sha }}
+            --commit-dirty=false

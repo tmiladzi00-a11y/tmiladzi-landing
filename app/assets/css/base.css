@@ -1,0 +1,181 @@
+/* ============================================================
+   TMILADZI MEDIA · base
+   Reset, page ground, type roles and the handful of layout
+   primitives every page composes with. Components own the rest
+   in their scoped styles.
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; color-scheme: dark; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+body {
+  margin: 0;
+  background: var(--tm-sys-color-surface);
+  color: var(--tm-sys-color-on-surface);
+  font-family: var(--tm-sys-type-body-family);
+  font-size: var(--tm-sys-type-body-size);
+  line-height: var(--tm-sys-type-body-line);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+img, svg, video { max-width: 100%; display: block; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible {
+  outline: 2px solid var(--tm-sys-color-focus);
+  outline-offset: 3px;
+  border-radius: var(--tm-sys-shape-corner);
+}
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- type roles ---------- */
+.display {
+  font-family: var(--tm-sys-type-display-family);
+  font-variation-settings: var(--tm-sys-type-display-axes);
+  line-height: .95;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+  margin: 0;
+}
+.h1 { font-size: var(--tm-sys-type-h1-size); }
+.h2 { font-size: var(--tm-sys-type-h2-size); }
+.h3 { font-size: var(--tm-sys-type-h3-size); font-variation-settings: var(--tm-sys-type-display-h3-axes); line-height: 1.1; }
+.h4 {
+  /* The prototype leaves .h4 in the body face (Newsreader, wght 650) and
+     keeps the browser's 24px heading margins. Both are encoded here on
+     purpose; reset the margin where a layout owns the spacing. */
+  font-family: var(--tm-sys-type-body-family);
+  font-size: var(--tm-sys-type-h4-size);
+  font-variation-settings: var(--tm-sys-type-display-h4-axes);
+  font-weight: 650;
+  line-height: 1.25; letter-spacing: -.01em;
+  margin: var(--tm-sys-space-5) 0;
+}
+.h4--tight { margin: 0; }
+.lede {
+  font-size: var(--tm-sys-type-lede-size);
+  color: var(--tm-sys-color-on-surface-variant);
+  line-height: 1.6; max-width: 60ch; font-weight: 300;
+  margin: 0 0 1em;
+}
+p { margin: 0 0 1em; max-width: 66ch; }
+.muted { color: var(--tm-sys-color-on-surface-variant); }
+.mono {
+  font-family: var(--tm-sys-type-data-family);
+  font-size: var(--tm-sys-type-data-size);
+  letter-spacing: var(--tm-sys-type-data-track);
+  color: var(--tm-sys-color-on-surface-faint);
+}
+.num { font-variant-numeric: tabular-nums; }
+.kicker {
+  font-family: var(--tm-sys-type-display-family);
+  font-variation-settings: var(--tm-sys-type-kicker-axes);
+  font-size: var(--tm-sys-type-kicker-size);
+  line-height: 1.25; letter-spacing: -.015em; max-width: 24ch; margin: 0;
+}
+.err {
+  color: var(--tm-sys-color-on-error-surface);
+  font-family: var(--tm-sys-type-data-family);
+  font-size: 11.5px; margin-top: var(--tm-sys-space-3);
+}
+.note {
+  font-family: var(--tm-sys-type-data-family);
+  font-size: var(--tm-sys-type-data-size-sm);
+  color: var(--tm-sys-color-on-surface-faint);
+  line-height: 1.6; max-width: none;
+}
+.note a { color: var(--tm-sys-color-on-surface-variant); }
+
+/* ---------- layout primitives ---------- */
+.wrap { max-width: var(--tm-sys-layout-maxw); margin: 0 auto; padding: 0 var(--tm-sys-space-5); }
+@media (min-width: 900px) { .wrap { padding: 0 var(--tm-sys-space-7); } }
+
+.row { display: flex; flex-wrap: wrap; gap: var(--tm-sys-space-4); align-items: center; margin-top: var(--tm-sys-space-6); }
+
+.grid { display: grid; gap: var(--tm-sys-space-5); }
+.g2, .g3 { grid-template-columns: 1fr; }
+.g4 { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 720px) { .g2, .g3 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); } }
+
+.split { display: grid; gap: var(--tm-sys-space-7); align-items: start; }
+@media (min-width: 900px) { .split { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--tm-sys-space-8); } }
+.split--even { grid-template-columns: 1fr; }
+@media (min-width: 900px) { .split--even { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.hr { height: 1px; background: var(--tm-sys-color-outline-variant); border: 0; margin: var(--tm-sys-space-7) 0; }
+
+/* spacing helpers: the only utilities in the build */
+.mt-2 { margin-top: var(--tm-sys-space-2); }
+.mt-3 { margin-top: var(--tm-sys-space-3); }
+.mt-4 { margin-top: var(--tm-sys-space-4); }
+.mt-5 { margin-top: var(--tm-sys-space-5); }
+.mt-6 { margin-top: var(--tm-sys-space-6); }
+.mt-7 { margin-top: var(--tm-sys-space-7); }
+.mb-3 { margin-bottom: var(--tm-sys-space-3); }
+.mb-4 { margin-bottom: var(--tm-sys-space-4); }
+.mb-5 { margin-bottom: var(--tm-sys-space-5); }
+.mb-6 { margin-bottom: var(--tm-sys-space-6); }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+.fg { color: var(--tm-sys-color-on-surface); }
+.cop-hi { color: var(--tm-sys-color-secondary-hover); }
+
+/* ---------- legal pages ---------- */
+.legal { max-width: 70ch; }
+.legal h2 { margin: var(--tm-sys-space-8) 0 var(--tm-sys-space-4); scroll-margin-top: 96px; }
+.legal h2:first-child { margin-top: 0; }
+.legal p { font-size: 16.5px; color: var(--tm-sys-color-on-surface-variant); line-height: 1.7; }
+.legal p strong, .legal li strong { color: var(--tm-sys-color-on-surface); font-weight: 600; }
+.legal a { color: var(--tm-sys-color-primary-hover); text-decoration: none; border-bottom: 1px solid var(--tm-sys-color-primary-container); }
+.legal a:hover { border-bottom-color: var(--tm-sys-color-primary-hover); }
+.legal .sub {
+  font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size);
+  letter-spacing: var(--tm-sys-type-data-track); color: var(--tm-sys-color-on-surface-faint);
+  margin: var(--tm-sys-space-5) 0 1em;
+}
+.numlist { counter-reset: n; list-style: none; padding: 0; margin: var(--tm-sys-space-4) 0 0; }
+.numlist li {
+  position: relative; padding-left: 34px; margin-bottom: 12px; font-size: 16px;
+  color: var(--tm-sys-color-on-surface-variant); line-height: 1.65;
+}
+.numlist li::before {
+  counter-increment: n; content: counter(n, decimal-leading-zero);
+  position: absolute; left: 0; top: .15em;
+  font-family: var(--tm-sys-type-data-family); font-size: 11.5px; color: var(--tm-sys-color-primary);
+}
+
+/* ---------- route changes ---------- */
+/* View Transitions: the page crossfades and rises 6px; a plate that is
+   shared between the work grid and its case study morphs between the two
+   (PlateFrame's vtName). Only ever in response to navigation. */
+::view-transition-old(root) { animation: vt-out var(--tm-sys-motion-duration-short-2) var(--tm-sys-motion-easing-accelerate) both; }
+::view-transition-new(root) { animation: vt-in var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-decelerate) both; }
+::view-transition-group(*) { animation-duration: var(--tm-sys-motion-duration-medium-2); animation-timing-function: var(--tm-sys-motion-easing-emphasized); }
+::view-transition-old(*):not(:only-child), ::view-transition-new(*):not(:only-child) { animation-duration: var(--tm-sys-motion-duration-short-2); }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+/* Vue fallback for browsers without View Transitions */
+.page-enter-active { transition: opacity var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-decelerate), transform var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-decelerate); }
+.page-leave-active { transition: opacity var(--tm-sys-motion-duration-short-2) var(--tm-sys-motion-easing-accelerate); }
+.page-enter-from { opacity: 0; transform: translateY(6px); }
+.page-leave-to { opacity: 0; }
+
+/* ---------- finishes ---------- */
+::selection { background: var(--tm-sys-color-primary-container); color: var(--tm-sys-color-on-surface); }
+p, li, dd { text-wrap: pretty; }
+:focus-visible { animation: focus-in var(--tm-sys-motion-duration-short-1) var(--tm-sys-motion-easing-decelerate); }
+@keyframes focus-in { from { outline-offset: 7px; } to { outline-offset: 3px; } }

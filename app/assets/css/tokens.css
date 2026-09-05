@@ -1,0 +1,214 @@
+/* ============================================================
+   TMILADZI MEDIA · design tokens
+   Three tiers. A component never reads a raw value: it reads its
+   own component token, which resolves to a system role, which
+   resolves to a reference value.
+
+     --tm-ref-*   reference   raw values, lifted from the prototype
+     --tm-sys-*   system      semantic roles (surface, primary, on-*)
+     --tm-comp-*  component   per-component bindings, declared in the
+                              component's own scoped stylesheet
+
+   Prefix is `tm`. Values are not up for renegotiation; roles are.
+   ============================================================ */
+:root {
+  /* ---------- reference · colour ---------- */
+  --tm-ref-color-ink:       #0B0F0D;
+  --tm-ref-color-ink-2:     #101614;
+  --tm-ref-color-surf:      #141A17;
+  --tm-ref-color-surf-2:    #1B2320;
+  --tm-ref-color-line:      #26302C;
+  --tm-ref-color-line-soft: #1C2521;
+  --tm-ref-color-fg:        #E9EFEA;
+  --tm-ref-color-fg-2:      #A9B6AF;
+  /* fg-3 was #6F7D77 in the prototype: 4.09:1 on surf, fails AA for
+     small text. Lifted to #808E88 (5.16:1 on surf, 4.70:1 on surf-2).
+     Same hue, same role, one step brighter. */
+  --tm-ref-color-fg-3:      #808E88;
+  --tm-ref-color-mal:       #2E9B6E;
+  --tm-ref-color-mal-hi:    #43BE8B;
+  --tm-ref-color-mal-dim:   #1B5C43;
+  --tm-ref-color-cop:       #C87A45;
+  --tm-ref-color-cop-hi:    #E09A63;
+  --tm-ref-color-cop-dim:   #3A2A1E;
+  --tm-ref-color-error:     #C05A4A;
+  --tm-ref-color-error-hi:  #E08878;
+  --tm-ref-color-on-mal:    #04140D;
+  --tm-ref-color-on-cop:    #180A02;
+
+  /* ---------- reference · space (4dp baseline) ---------- */
+  --tm-ref-space-1:  4px;
+  --tm-ref-space-2:  8px;
+  --tm-ref-space-3:  12px;
+  --tm-ref-space-4:  16px;
+  --tm-ref-space-5:  24px;
+  --tm-ref-space-6:  32px;
+  --tm-ref-space-7:  48px;
+  --tm-ref-space-8:  64px;
+  --tm-ref-space-9:  96px;
+  --tm-ref-space-10: 140px;
+
+  /* ---------- reference · shape, layout ---------- */
+  --tm-ref-radius:      2px;
+  --tm-ref-radius-pill: 999px;
+  --tm-ref-maxw:        1280px;
+  --tm-ref-rail:        56px;
+  --tm-ref-touch:       48px;
+
+  /* ---------- reference · type ---------- */
+  --tm-ref-font-display: "Archivo", "Archivo Fallback", "Helvetica Neue", Arial, sans-serif;
+  --tm-ref-font-body:    "Newsreader", "Newsreader Fallback", Georgia, "Times New Roman", serif;
+  --tm-ref-font-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---------- reference · motion ---------- */
+  --tm-ref-duration-short-1:  100ms;
+  --tm-ref-duration-short-2:  200ms;
+  --tm-ref-duration-medium-1: 300ms;
+  --tm-ref-duration-medium-2: 400ms;
+  --tm-ref-duration-long-1:   500ms;
+  --tm-ref-easing-standard:   cubic-bezier(0.2, 0, 0, 1);
+  --tm-ref-easing-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --tm-ref-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+  --tm-ref-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+
+  /* ============================================================
+     SYSTEM · colour roles
+     ============================================================ */
+  --tm-sys-color-surface:            var(--tm-ref-color-ink);
+  --tm-sys-color-surface-sunken:     var(--tm-ref-color-ink-2);
+  --tm-sys-color-surface-raised:     var(--tm-ref-color-surf);
+  --tm-sys-color-surface-raised-2:   var(--tm-ref-color-surf-2);
+  --tm-sys-color-outline:            var(--tm-ref-color-line);
+  --tm-sys-color-outline-variant:    var(--tm-ref-color-line-soft);
+  --tm-sys-color-on-surface:         var(--tm-ref-color-fg);
+  --tm-sys-color-on-surface-variant: var(--tm-ref-color-fg-2);
+  --tm-sys-color-on-surface-faint:   var(--tm-ref-color-fg-3);
+
+  --tm-sys-color-primary:            var(--tm-ref-color-mal);
+  --tm-sys-color-primary-hover:      var(--tm-ref-color-mal-hi);
+  --tm-sys-color-primary-container:  var(--tm-ref-color-mal-dim);
+  --tm-sys-color-on-primary:         var(--tm-ref-color-on-mal);
+  --tm-sys-color-primary-tint:       rgba(46, 155, 110, 0.07);
+
+  --tm-sys-color-secondary:          var(--tm-ref-color-cop);
+  --tm-sys-color-secondary-hover:    var(--tm-ref-color-cop-hi);
+  --tm-sys-color-secondary-container:var(--tm-ref-color-cop-dim);
+  --tm-sys-color-on-secondary:       var(--tm-ref-color-on-cop);
+  --tm-sys-color-secondary-tint:     rgba(200, 122, 69, 0.06);
+
+  --tm-sys-color-error:              var(--tm-ref-color-error);
+  --tm-sys-color-on-error-surface:   var(--tm-ref-color-error-hi);
+
+  --tm-sys-color-focus:              var(--tm-ref-color-mal-hi);
+  --tm-sys-color-scrim:              rgba(11, 15, 13, 0.82);
+
+  /* ============================================================
+     SYSTEM · elevation ladder
+     Elevation here is surface shift plus hairline shift, never a
+     drop shadow. Level 0 is the page; level 5 is the header overlay.
+     ============================================================ */
+  --tm-sys-elevation-0-bg:     var(--tm-sys-color-surface);
+  --tm-sys-elevation-0-line:   transparent;
+  --tm-sys-elevation-1-bg:     var(--tm-sys-color-surface-sunken);
+  --tm-sys-elevation-1-line:   var(--tm-sys-color-outline-variant);
+  --tm-sys-elevation-2-bg:     var(--tm-sys-color-surface-raised);
+  --tm-sys-elevation-2-line:   var(--tm-sys-color-outline-variant);
+  --tm-sys-elevation-3-bg:     var(--tm-sys-color-surface-raised-2);
+  --tm-sys-elevation-3-line:   var(--tm-sys-color-outline);
+  --tm-sys-elevation-4-bg:     var(--tm-sys-color-surface-raised-2);
+  --tm-sys-elevation-4-line:   var(--tm-sys-color-primary-container);
+  --tm-sys-elevation-5-bg:     var(--tm-sys-color-scrim);
+  --tm-sys-elevation-5-line:   var(--tm-sys-color-outline-variant);
+  --tm-sys-elevation-5-filter: blur(14px) saturate(140%);
+
+  /* ============================================================
+     SYSTEM · state layers
+     Interaction is a translucent overlay of the content colour on
+     the base, composed with color-mix(). Not a colour swap.
+     ============================================================ */
+  --tm-sys-state-hover:   8%;
+  --tm-sys-state-focus:   10%;
+  --tm-sys-state-pressed: 10%;
+  --tm-sys-state-dragged: 16%;
+
+  /* ============================================================
+     SYSTEM · motion
+     ============================================================ */
+  --tm-sys-motion-duration-short-1:  var(--tm-ref-duration-short-1);
+  --tm-sys-motion-duration-short-2:  var(--tm-ref-duration-short-2);
+  --tm-sys-motion-duration-medium-1: var(--tm-ref-duration-medium-1);
+  --tm-sys-motion-duration-medium-2: var(--tm-ref-duration-medium-2);
+  --tm-sys-motion-duration-long-1:   var(--tm-ref-duration-long-1);
+  --tm-sys-motion-easing-standard:   var(--tm-ref-easing-standard);
+  --tm-sys-motion-easing-emphasized: var(--tm-ref-easing-emphasized);
+  --tm-sys-motion-easing-decelerate: var(--tm-ref-easing-decelerate);
+  --tm-sys-motion-easing-accelerate: var(--tm-ref-easing-accelerate);
+
+  /* ============================================================
+     SYSTEM · space, shape, layout, density
+     ============================================================ */
+  --tm-sys-space-1:  var(--tm-ref-space-1);
+  --tm-sys-space-2:  var(--tm-ref-space-2);
+  --tm-sys-space-3:  var(--tm-ref-space-3);
+  --tm-sys-space-4:  var(--tm-ref-space-4);
+  --tm-sys-space-5:  var(--tm-ref-space-5);
+  --tm-sys-space-6:  var(--tm-ref-space-6);
+  --tm-sys-space-7:  var(--tm-ref-space-7);
+  --tm-sys-space-8:  var(--tm-ref-space-8);
+  --tm-sys-space-9:  var(--tm-ref-space-9);
+  --tm-sys-space-10: var(--tm-ref-space-10);
+
+  --tm-sys-shape-corner:      var(--tm-ref-radius);
+  --tm-sys-shape-corner-pill: var(--tm-ref-radius-pill);
+  --tm-sys-layout-maxw:       var(--tm-ref-maxw);
+  --tm-sys-layout-rail:       var(--tm-ref-rail);
+  --tm-sys-layout-touch:      var(--tm-ref-touch);
+  --tm-sys-layout-header-h:   62px;
+
+  /* density: default and compact. Compact is opted into by the
+     booking wizard's calendar and add-on rows via [data-density]. */
+  --tm-sys-density-control-h: 44px;
+  --tm-sys-density-gap:       var(--tm-sys-space-4);
+
+  /* ============================================================
+     SYSTEM · type roles (family + axis settings + scale)
+     ============================================================ */
+  --tm-sys-type-display-family: var(--tm-ref-font-display);
+  --tm-sys-type-body-family:    var(--tm-ref-font-body);
+  --tm-sys-type-data-family:    var(--tm-ref-font-mono);
+
+  --tm-sys-type-display-axes:     "wdth" 112, "wght" 700;
+  --tm-sys-type-display-h3-axes:  "wdth" 105, "wght" 650;
+  --tm-sys-type-display-h4-axes:  "wdth" 100, "wght" 650; /* .h4 sits in the body face; wdth is inert there */
+  --tm-sys-type-brand-axes:       "wdth" 118, "wght" 800;
+  --tm-sys-type-kicker-axes:      "wdth" 92,  "wght" 600;
+  --tm-sys-type-plate-axes:       "wdth" 108, "wght" 650;
+  --tm-sys-type-stat-axes:        "wdth" 110, "wght" 700;
+  --tm-sys-type-price-axes:       "wdth" 108, "wght" 700;
+  --tm-sys-type-drawer-axes:      "wdth" 105, "wght" 600;
+  --tm-sys-type-client-axes:      "wdth" 100, "wght" 600;
+
+  --tm-sys-type-h1-size: clamp(42px, 7.2vw, 92px);
+  --tm-sys-type-h2-size: clamp(30px, 4.4vw, 54px);
+  --tm-sys-type-h3-size: clamp(21px, 2.2vw, 29px);
+  --tm-sys-type-h4-size: 18px;
+  --tm-sys-type-lede-size: clamp(18px, 1.9vw, 22px);
+  --tm-sys-type-body-size: 17px;
+  --tm-sys-type-body-line: 1.65;
+  --tm-sys-type-kicker-size: clamp(22px, 3vw, 34px);
+  --tm-sys-type-plate-title-size: clamp(17px, 2vw, 24px);
+
+  --tm-sys-type-data-size:    12px;
+  --tm-sys-type-data-size-xs: 10px;
+  --tm-sys-type-data-size-sm: 11px;
+  --tm-sys-type-data-size-md: 12.5px;
+  --tm-sys-type-data-size-lg: 14px;
+  --tm-sys-type-data-track:   0.06em;
+  --tm-sys-type-label-track:  0.14em;
+  --tm-sys-type-eyebrow-track: 0.18em;
+}
+
+[data-density="compact"] {
+  --tm-sys-density-control-h: 38px;
+  --tm-sys-density-gap:       var(--tm-sys-space-2);
+}

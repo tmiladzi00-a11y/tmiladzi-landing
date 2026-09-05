@@ -12,7 +12,9 @@ withDefaults(defineProps<{ term: string; first?: boolean; last?: boolean; flush?
 
 <style scoped>
 .contactrow {
-  display: grid; grid-template-columns: auto 1fr; gap: var(--tm-sys-space-4); align-items: baseline;
+  /* Fixed label column so values line up down the list; auto would size
+     each row to its own label and leave the values ragged. */
+  display: grid; grid-template-columns: 6.25rem minmax(0, 1fr); gap: var(--tm-sys-space-4); align-items: baseline;
   padding: var(--tm-sys-space-4) 0; border-bottom: 1px solid var(--tm-sys-color-outline-variant);
 }
 .contactrow--last { border-bottom: 0; }

@@ -34,6 +34,7 @@ const legal = [
             Photography, film and documentary production for organisations that have to
             prove their impact. Kitwe, Copperbelt — working Zambia-wide.
           </p>
+          <SocialLinks class="foot__social" />
         </div>
         <nav class="foot__col" aria-labelledby="f-studio">
           <h2 id="f-studio" class="foot__h">Studio</h2>
@@ -48,10 +49,7 @@ const legal = [
           <ul class="foot__direct">
             <li><a :href="`mailto:${SITE.email}`">{{ SITE.email }}</a></li>
             <li><a :href="SITE.phoneHref">{{ SITE.phone }}</a></li>
-            <li><a :href="SITE.whatsapp" target="_blank" rel="noopener">WhatsApp</a></li>
-            <li><a :href="SITE.instagram" target="_blank" rel="noopener">Instagram</a></li>
-            <li><a :href="SITE.youtube" target="_blank" rel="noopener">YouTube</a></li>
-            <li><a :href="SITE.linkedin" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a :href="SITE.whatsapp" target="_blank" rel="noopener">WhatsApp {{ SITE.phone }}</a></li>
           </ul>
         </div>
       </div>
@@ -97,15 +95,15 @@ const legal = [
   text-transform: uppercase; color: var(--tm-sys-color-primary-hover);
 }
 .foot__blurb { font-size: 15px; margin: var(--tm-sys-space-4) 0 0; max-width: 38ch; }
+.foot__social { margin-top: var(--tm-sys-space-5); }
 .foot__h {
   font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-xs); letter-spacing: .18em;
   text-transform: uppercase; color: var(--tm-sys-color-on-surface-faint); margin: 0 0 var(--tm-sys-space-4); font-weight: 400;
 }
 .foot__col ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-/* on phones the six direct lines span the row and sit two-up, three rows deep */
+/* on phones the direct lines span the row; social channels live as icons under the brand */
 .foot__col--direct { grid-column: 1 / -1; }
-.foot__direct { grid-template-columns: repeat(2, 1fr); column-gap: var(--tm-sys-space-5); }
-@media (min-width: 820px) { .foot__col--direct { grid-column: auto; } .foot__direct { grid-template-columns: 1fr; } }
+@media (min-width: 820px) { .foot__col--direct { grid-column: auto; } }
 .foot a { text-decoration: none; color: var(--tm-sys-color-on-surface-variant); font-size: 14.5px;
   transition: color var(--tm-sys-motion-duration-short-2) var(--tm-sys-motion-easing-standard); }
 .foot a:hover { color: var(--tm-sys-color-primary-hover); }

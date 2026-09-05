@@ -58,7 +58,10 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-pages',
     cloudflare: { deployConfig: true, nodeCompat: true },
-    prerender: { crawlLinks: true, routes: ['/', '/sitemap.xml'], ignore: ['/api'] },
+    // Flat files (work.html, not work/index.html): Cloudflare Pages then serves
+    // /work as-is instead of redirecting to /work/, which kept the client
+    // router's path from matching the server's and broke same-page navigation.
+    prerender: { crawlLinks: true, routes: ['/', '/sitemap.xml'], ignore: ['/api'], autoSubfolderIndex: false },
   },
   experimental: { defaults: { nuxtLink: { prefetch: true } }, viewTransition: true },
 })

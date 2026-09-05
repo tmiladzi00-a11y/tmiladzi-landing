@@ -8,7 +8,7 @@ const router = useRouter()
 const valid = new Set<string>(WORK_CATEGORIES.map((c) => c[0]))
 const filter = computed<ProjectFilter>({
   get: () => (valid.has(String(route.query.cat)) ? (route.query.cat as ProjectFilter) : 'all'),
-  set: (v) => router.replace({ query: v === 'all' ? {} : { cat: v } }),
+  set: (v) => router.replace({ path: route.path, query: v === 'all' ? {} : { cat: v } }),
 })
 const shown = computed(() => (filter.value === 'all' ? PROJECTS : PROJECTS.filter((p) => p.cat === filter.value)))
 </script>

@@ -395,8 +395,9 @@ legal control. Do not read `project.client` directly in a template.
 ## 11. Delivery
 
 Component styles are inlined into each prerendered page
-(`features.inlineStyles`), the build emits one stylesheet for client-side
-navigation (`cssCodeSplit: false`), and a Nitro plugin
+(`features.inlineStyles`), CSS stays split per chunk so the router can load
+each page's styles on client-side navigation (bundling it into one file makes
+Nuxt drop the link and navigations arrive unstyled), and a Nitro plugin
 (`server/plugins/async-css.ts`) turns that stylesheet's link into a
 non-blocking preload with a `<noscript>` copy. First paint depends on the
 HTML alone. `scripts/serve-static.mjs` serves `dist/` with gzip

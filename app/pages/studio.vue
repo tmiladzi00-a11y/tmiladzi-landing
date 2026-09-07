@@ -28,7 +28,7 @@ useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by
           </p>
           <p class="lede">
             We work where our clients work: on operating mine sites, in plant rooms and workshops,
-            at rural project launches, in bank boardrooms and airport terminals, at State House,
+            at rural project launches, in bank boardrooms and airport terminals, for State House,
             and in villages three hours off the tarmac. The brief is nearly always the same underneath — someone has done real work
             and needs the people who fund, regulate or buy from them to believe it.
           </p>
@@ -56,7 +56,7 @@ useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by
     <PageBand dark labelledby="kit-h">
       <SectionHead id="kit-h" eyebrow="Kit & workflow" title="What we shoot on.">
         A deliberately narrow kit list. One camera system means one colour
-        science, which is why a client's images from 2022 still sit next to this quarter's without a re-grade.
+        science, which is why a client's images from 2022 still without a re-grade.
       </SectionHead>
       <ul class="grid g4 kit">
         <SurfaceCard tag="li" k="Cameras"><h3 class="h4">Canon mirrorless</h3><p>Full-frame bodies and a prime and zoom set covering wide site work through long-lens portraiture.</p></SurfaceCard>

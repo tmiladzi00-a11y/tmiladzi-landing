@@ -8,6 +8,6 @@ export const PROCESS: ProcessStep[] = [
   ['Backup & organisation', 'Rushes backed up and structured on location, nightly. Nothing waits for the drive home.'],
   ['Editing', "Selection, edit, grade and sound, to the agreed spec and the client's own where they have one."],
   ['Client review', 'A review cut or gallery, with a defined round of changes so the process has an end.'],
-  ['Final delivery', 'Masters and library delivered by client gallery, Drive or physical drive. No watermarks.'],
+  ['Final delivery', 'Masters and library delivered by client gallery or physical drive. No watermarks.'],
   ['Archiving', 'Held and backed up for at least 12 months after delivery, usually far longer. Re-supply on request.'],
 ]

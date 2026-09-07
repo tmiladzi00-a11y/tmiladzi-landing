@@ -18,7 +18,7 @@ const strip = [...PROJECTS.filter((p) => p.featured), ...PROJECTS.filter((p) => 
 const stats: [string, string][] = [
   ['8', 'Years in production'],
   ['3&nbsp;+&nbsp;8', 'Core team + crew at scale'],
-  ['4K&nbsp;/&nbsp;ProRes', 'Broadcast-spec delivery'],
+  ['4K&nbsp;/&nbsp;10-bit', 'Broadcast-spec delivery'],
   ['Next&nbsp;day', 'Event stills turnaround'],
   ['Nationwide', 'Copperbelt base, ZM-wide reach'],
 ]

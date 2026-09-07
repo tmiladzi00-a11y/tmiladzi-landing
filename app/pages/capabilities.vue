@@ -14,16 +14,16 @@ const anchors: { k: string; rows: Rate[] }[] = [
     { name: 'Photo + video', qual: 'Full day', price: '34,250', from: true },
   ] },
   { k: 'Film', rows: [
-    { name: 'Testimonial film', qual: 'Per piece', price: '3,000', from: true },
-    { name: 'Documentary', qual: 'Full pipeline', price: '44,500', from: true },
+    { name: 'Testimonial film', qual: 'Per piece', price: '6,000', from: true },
+    { name: 'Documentary', qual: 'Full pipeline', price: '45,000', from: true },
   ] },
   { k: 'Day rates', rows: [
-    { name: 'Drone coverage', qual: 'Per day', price: '7,000', from: true },
+    { name: 'Drone coverage', qual: 'Per day', price: '10,000', from: true },
     { name: 'Travel', qual: 'Within Copperbelt', price: '2,500', unit: '/ day' },
     { name: 'Travel', qual: 'Outside Copperbelt', price: '12,000', unit: '/ day' },
   ] },
 ]
-/* Thirteen lines of spec, in the order a job runs: how it is shot, what the
+/* Twelve lines of spec, in the order a job runs: how it is shot, what the
    masters are, how they reach the client. */
 const spec: { k: string; lead: string; rows: [string, string][] }[] = [
   { k: 'Capture', lead: 'How it is shot', rows: [
@@ -34,15 +34,14 @@ const spec: { k: string; lead: string; rows: [string, string][] }[] = [
     ['Lighting', 'Moderate three-point; naturalistic, not dramatic, unless briefed'],
   ] },
   { k: 'Masters', lead: 'What the files are', rows: [
-    ['Master codec', 'ProRes 422 HQ (.mov)'],
-    ['Audio files', 'WAV, 24-bit / 48 kHz'],
+    ['Master codec', 'H.264 (MP4), 10-bit'],
+    ['Audio files', 'WAV, 32-bit / 48 kHz'],
     ['Dialogue levels', 'Peaking −12 to −6 dBFS'],
     ['Stills', 'Full-resolution JPEG and RAW on request; unlimited edited selects'],
     ['Watermarks', 'None applied to client masters'],
   ] },
   { k: 'Handover', lead: 'How you receive it', rows: [
-    ['Folder structure', 'Separate interview and b-roll directories, shoot-day dated'],
-    ['Transfer', "Client gallery, Google Drive or physical drive — client's choice"],
+    ['Transfer', "Client gallery or physical drive — client's choice"],
     ['Archive', 'Held and backed up for at least 12 months post-delivery; re-supply on request'],
   ] },
 ]
@@ -96,7 +95,7 @@ const spec: { k: string; lead: string; rows: [string, string][] }[] = [
     <PageBand dark>
       <ul class="grid g4 comp">
         <SurfaceCard tag="li" k="Site access"><h3 class="h4">Induction ready</h3><p>Crew complete site safety induction and PPE requirements before filming on operating plant or mine sites.</p></SurfaceCard>
-        <SurfaceCard tag="li" k="Confidentiality"><h3 class="h4">NDA as standard</h3><p>We sign client NDAs and treat unreleased footage as restricted. Nothing is published without written clearance.</p></SurfaceCard>
+        <SurfaceCard tag="li" k="Confidentiality"><h3 class="h4">NDA</h3><p>We sign client NDAs and treat unreleased footage as restricted. Nothing is published without written clearance.</p></SurfaceCard>
         <SurfaceCard tag="li" k="Aerial"><h3 class="h4">Drone coverage</h3><p>Aerial coverage of site, plant and landscape, available on request. Flights are subject to airspace permissions, your site rules and the required civil aviation authorisation being in place for the location.</p></SurfaceCard>
         <SurfaceCard tag="li" k="Connectivity"><h3 class="h4">Starlink on location</h3><p>Rushes backed up and transferred from remote sites the same day, not a week later in town.</p></SurfaceCard>
       </ul>

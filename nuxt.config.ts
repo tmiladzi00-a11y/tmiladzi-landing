@@ -48,9 +48,12 @@ export default defineNuxtConfig({
     },
   },
   image: { quality: 82, format: ['webp'] },
-  // One stylesheet, not one per shared component: a single render-blocking
-  // round trip on a slow link instead of ten.
-  vite: { build: { cssCodeSplit: false } },
+  // CSS stays split per chunk. With everything bundled into one file Nuxt
+  // drops the stylesheet link (it believes the inlined styles cover it), and
+  // pages reached by client-side navigation then arrive unstyled until a
+  // refresh. Split files are what the router loads on navigation; the
+  // initial page's styles are inlined and the async-css plugin keeps the
+  // duplicate links off the critical path.
   // Cloudflare Pages: every page is prerendered to static HTML at build time
   // and served as files; the small worker that ships alongside handles
   // /api/* (form delivery) and anything not prerendered. Nitro writes the

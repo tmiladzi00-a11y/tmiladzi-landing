@@ -6,7 +6,7 @@
 #   secrets.CLOUDFLARE_API_TOKEN     token with "Cloudflare Pages: Edit"
 #   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
 #   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
-#   secrets.NUXT_PUBLIC_BOOKING_API  Apps Script /exec URL; blank = preview mode
+#   secrets.NUXT_PUBLIC_BOOKING_API  optional Apps Script /exec URL for submissions; blank = /api/send
 name: Deploy
 
 on:

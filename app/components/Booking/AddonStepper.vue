@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import type { Addon } from '~/content/types'
 import { fmtMoney } from '~/utils/money'
-defineProps<{ addons: Addon[]; qty: (id: string) => number }>()
+import { unitLabel } from '~/composables/useBookingQuote'
+/* `caps` lowers an add-on's ceiling below its own max: extra hours cannot
+   run into the next booking on the studio calendar. */
+const props = defineProps<{ addons: Addon[]; qty: (id: string) => number; caps?: Record<string, number> }>()
+const limit = (a: Addon) => Math.min(a.max ?? Infinity, props.caps?.[a.id] ?? Infinity)
 const emit = defineEmits<{ bump: [id: string, delta: number] }>()
 /* remember which way each counter last moved so the digit rolls that way */
 const lastDir = reactive<Record<string, number>>({})
@@ -16,12 +20,13 @@ function bump(id: string, delta: number) { lastDir[id] = delta >= 0 ? 1 : -1; em
         <p class="addon__d">{{ a.d }}</p>
         <span v-if="a.price == null" class="mono cop-hi">Quoted separately</span>
         <span v-else class="mono fg">K{{ fmtMoney(a.price) }}<template v-if="a.unit"> / {{ a.unit }}</template></span>
+        <span v-if="a.type === 'qty' && limit(a) < (a.max ?? Infinity)" class="mono addon__cap">{{ limit(a) === 0 ? 'Another booking follows this one, so no extra time is free' : `Up to ${limit(a)} more${unitLabel(a.unit, limit(a))} before the next booking` }}</span>
       </div>
       <div class="addon__ctrl">
         <div v-if="a.type === 'qty'" class="stepper" role="group" :aria-labelledby="`addon-${a.id}`">
           <button type="button" class="stepbtn" :aria-label="`Fewer ${a.name}`" :disabled="qty(a.id) <= 0" @click="bump(a.id, -1)">−</button>
           <span class="stepval num" aria-live="polite"><Transition :name="(lastDir[a.id] ?? 1) > 0 ? 'odo-up' : 'odo-down'" mode="out-in"><span :key="qty(a.id)" class="stepval__d">{{ qty(a.id) }}</span></Transition></span>
-          <button type="button" class="stepbtn" :aria-label="`More ${a.name}`" :disabled="qty(a.id) >= (a.max ?? Infinity)" @click="bump(a.id, 1)">+</button>
+          <button type="button" class="stepbtn" :aria-label="`More ${a.name}`" :disabled="qty(a.id) >= limit(a)" @click="bump(a.id, 1)">+</button>
         </div>
         <button v-else type="button" class="addtoggle" :aria-pressed="qty(a.id) > 0" :aria-describedby="`addon-${a.id}`" @click="bump(a.id, 0)">{{ qty(a.id) ? 'Added' : 'Add' }}</button>
       </div>
@@ -40,6 +45,7 @@ function bump(id: string, delta: number) { lastDir[id] = delta >= 0 ? 1 : -1; em
 }
 .addon.on { --_line: var(--tm-sys-color-secondary); --_bg: var(--tm-sys-elevation-3-bg); }
 .addon__d { font-size: 14px; color: var(--tm-sys-color-on-surface-variant); margin: 5px 0 8px; }
+.addon__cap { display: block; margin-top: 6px; color: var(--tm-sys-color-secondary-hover); font-size: 10.5px; }
 .addon__ctrl { flex: none; }
 .stepper { display: flex; align-items: center; gap: 2px; border: 1px solid var(--tm-sys-color-outline); border-radius: var(--tm-sys-shape-corner); }
 .stepbtn {

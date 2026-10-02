@@ -141,6 +141,7 @@ The full inventory, each with the action it answers:
 | Drawer links drop in, 30ms stagger | Opening the menu | `AppDrawer` |
 | Contents rail marks the clause under the reading line | Reading a legal page | `LegalToc` (IntersectionObserver) |
 | Focus ring eases its offset in | Keyboard focus | `base.css` |
+| Month grid and status dot pulse, column by column | Waiting on the studio calendar; stops the moment it answers | `BookingAvailabilityCalendar` |
 
 Tempting and deliberately absent: drifting hero grain, a pulsing reel
 button, count-up stats on load, a header that condenses on scroll.
@@ -356,7 +357,8 @@ Work grid, case-study hero and gallery, and the showreel.
 `BookingStepIndicator` (an `<ol>` with `aria-current="step"`),
 `BookingServicePicker` (radio cards in a `<fieldset>`),
 `BookingAvailabilityCalendar` (Monday-first month grid of buttons with
-full-date labels, notice-period floor, blocked hatch, 13-month horizon,
+full-date labels, notice-period floor, open / partial / full states from the
+studio calendar, 13-month horizon,
 compact density), `BookingSlotList` (radio chips), `BookingAddonStepper`
 (stepper or toggle per add-on, per-add-on max, compact density) and
 `BookingSummary` (sticky rail; line items animate in and the total ticks
@@ -375,6 +377,32 @@ confirmation when delivery succeeds and the copy-and-WhatsApp panel when it
 does not; the wizard does the same and words its confirmation accordingly.
 A hidden honeypot field drops bot submissions silently. The brief is laid
 out as six numbered `<fieldset>`s because the copy promises six questions.
+
+## 8b. Availability
+
+`/api/availability` (`server/api/availability.get.ts`) fetches the studio's
+private iCal feed, runs it through `server/utils/ics.ts` and returns busy
+intervals as `{ s, e }` in epoch ms, cached at the edge for two minutes.
+The parser keeps nothing but start and end, so no title or name can reach a
+browser. `app/utils/availability.ts` holds the slot rules as pure functions,
+tested in `tests/availability.test.ts`: `slotFree` (do the service's hours
+fit from this start time), `freeWindowFits` (is there a clear run inside the
+working day, for full-day services), `dayAvailability` (open, partial, full)
+and `maxExtraHours` (how far Additional time can stretch before the next
+booking). All times are studio time, UTC+2.
+
+In the UI a date has three states. Open is the plain cell. Partial carries a
+copper corner and stays selectable. Full is hatched and disabled. Start
+times that clash stay on the row, struck through with the same hatch, so
+the visitor sees the shape of the day. A selected date or time keeps its
+copper fill under hover. The mode line above the steps reads "Checking the
+studio calendar…" until the feed answers, then disappears once
+live data is in. It stays only for "Preview mode" or when the calendar is
+unreachable.
+While it is checking, the month grid is a skeleton: dates dimmed, pulsing
+and disabled, start times disabled, `aria-busy` set, so nothing can be
+picked before the site knows it is free. That pulse is the one looping
+animation on the site, and it exists only for the length of the wait.
 
 ## 9. Pricing engine
 

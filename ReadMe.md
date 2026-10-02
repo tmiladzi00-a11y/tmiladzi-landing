@@ -35,7 +35,7 @@ Repository settings it needs:
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | API token with the "Cloudflare Pages: Edit" permission |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | The account that owns the Pages project |
-| Secret | `NUXT_PUBLIC_BOOKING_API` | Apps Script `/exec` URL; leave unset for preview mode |
+| Secret | `NUXT_PUBLIC_BOOKING_API` | Optional Apps Script `/exec` URL for submissions; unset means `/api/send` |
 | Variable | `CLOUDFLARE_PAGES_PROJECT` | Pages project name; defaults to `tmiladzi` if unset |
 
 Form delivery runs in the worker and needs three environment variables set
@@ -55,13 +55,62 @@ Create, Pages, "Direct Upload") with that name, then attach the custom
 domain there. `public/_headers` sets long-lived caching for hashed assets
 and fonts plus the security headers; Cloudflare reads it from the output.
 
-## Booking backend
+## Live availability from the studio calendar
 
-Copy `.env.example` to `.env` and set `NUXT_PUBLIC_BOOKING_API` to the Google
-Apps Script `/exec` URL. Left blank, `/booking` runs in preview mode on sample
-availability and shows a notice; submissions still produce a reference and a
-copy-to-WhatsApp fallback. Rates live in `app/content/services.ts` and must be
-mirrored in the Apps Script, which recomputes every total itself.
+The booking page shows what is actually free by reading the photographer's
+own calendar. Nothing is written back: a request comes in, the conversation
+happens offline, the photographer adds the booking to the calendar, and the
+site shows that time as taken on the next load (within two minutes).
+
+One-time setup, about five minutes, free:
+
+1. In Google Calendar create a calendar just for bookings, e.g. "Tmiladzi
+   bookings" (left sidebar, **+** next to Other calendars, Create new
+   calendar). A dedicated calendar matters: **everything on it blocks that
+   time on the site**, so personal reminders should live elsewhere.
+2. Open that calendar's settings, scroll to **Integrate calendar**, and copy
+   **Secret address in iCal format**. Treat it like a password.
+3. In Cloudflare: Workers & Pages, the project, Settings, Variables and
+   Secrets. Add `NUXT_CALENDAR_ICS_URL` as a **secret** with that address,
+   for Production and Preview. Redeploy.
+
+Apple Calendar and Outlook work the same way with their published iCal
+links. Several calendars can be combined by separating the addresses with
+commas. For local development put the same variable in `.env`.
+
+How bookings read on the site:
+
+| On the calendar | On the site |
+|---|---|
+| Timed event, e.g. Sat 09:00–10:00 | Start times that would overlap it are crossed out; the rest of the day stays bookable |
+| All-day event | That date is fully booked for every service |
+| Repeating event | Every occurrence blocks its time |
+| Cancelled or deleted event | Free again |
+
+A start time is offered when the service's hours fit before the next
+booking: a one-hour session needs one clear hour, a four-hour event needs
+four. A wedding date is offered when ten clear hours exist between 06:00 and
+22:00. To hold a whole day for any reason, add an all-day event. To leave
+travel time after a job, make the calendar event longer. Start times and
+the working day are in `app/content/services.ts` and
+`app/utils/availability.ts`.
+
+Only start and end times leave the worker. Event titles, names and
+locations are never sent to a visitor's browser.
+
+If the calendar cannot be reached, the page says so and shows every date
+as open, to be confirmed by reply. With no address configured it runs on
+sample data with a "Preview mode" notice. `scripts/availability-check.mjs`
+walks the wizard against whichever calendar the dev server is pointed at.
+
+## Booking submissions
+
+Booking requests are emailed through `/api/send` (see Deploy). An optional
+Google Apps Script web app can take them instead: set
+`NUXT_PUBLIC_BOOKING_API` to its `/exec` URL. Either way a request produces a
+reference and a copy-to-WhatsApp fallback. Rates live in
+`app/content/services.ts`; if an Apps Script is used it must mirror them,
+since it recomputes every total itself.
 
 ## Where things are
 

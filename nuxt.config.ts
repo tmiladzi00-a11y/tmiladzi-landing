@@ -21,9 +21,13 @@ export default defineNuxtConfig({
     resendApiKey: '',
     mailTo: 'tmiladzi@gmail.com',
     mailFrom: 'Tmiladzi site <site@tmiladzi.com>',
+    // Private iCal address of the studio's bookings calendar
+    // (NUXT_CALENDAR_ICS_URL). The booking page reads live availability from
+    // it; blank means preview mode on sample data.
+    calendarIcsUrl: '',
     public: {
-      // Google Apps Script /exec URL. Empty means preview mode: sample
-      // availability, a visible notice, and the WhatsApp fallback.
+      // Optional Google Apps Script /exec URL for booking submissions. Empty
+      // means requests go through the site's own /api/send.
       bookingApi: '',
       siteUrl: 'https://tmiladzi.com',
     },

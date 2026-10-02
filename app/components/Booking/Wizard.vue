@@ -9,6 +9,7 @@ import { useTermsFingerprint } from '~/composables/useTermsFingerprint'
 import { copyText } from '~/composables/useClipboard'
 import { fmtDate } from '~/utils/dates'
 import { fmtMoney } from '~/utils/money'
+import { dayAvailability, maxExtraHours, MAX_EXTRA_HOURS } from '~/utils/availability'
 
 const STEPS = ['Coverage', 'Date', 'Add-ons', 'Details', 'Confirm']
 const REGIONS = ['Within the Copperbelt', 'Outside the Copperbelt', 'Outside Zambia']
@@ -49,9 +50,30 @@ watch(serviceId, () => {
   date.value = null; time.value = null; quote.reset()
 })
 
+/* ---------- availability for the chosen day ---------- */
+const busy = api.busy
+const dayInfo = computed(() => (service.value && date.value ? dayAvailability(busy.value, date.value, service.value, SLOTS) : null))
+const takenSlots = computed(() => dayInfo.value?.taken ?? [])
+// a time picked on one day may be taken on another, or the calendar may arrive
+// after the choice was made: never carry a clashing selection forward
+watch([date, takenSlots], () => { if (time.value && takenSlots.value.includes(time.value)) time.value = null })
+watch(dayInfo, (d) => { if (d?.state === 'full') { date.value = null; time.value = null } })
+
+/* extra hours may not run into the next booking */
+const timeAddon = computed(() => service.value?.addons.find((a) => a.id === 'time'))
+const addonCaps = computed<Record<string, number>>(() => {
+  const svc = service.value, a = timeAddon.value
+  const caps: Record<string, number> = {}
+  if (svc && a && date.value) caps.time = maxExtraHours(busy.value, date.value, svc.times ? time.value : null, svc, a.max ?? MAX_EXTRA_HOURS)
+  return caps
+})
+watch(addonCaps, (c) => {
+  if (c.time != null && quote.qty('time') > c.time) quote.add.value = { ...quote.add.value, time: c.time }
+})
+
 const effectiveTime = computed(() => (service.value && !service.value.times ? 'Full day' : time.value))
 const canDate = computed(() => !!service.value)
-const canAddons = computed(() => !!date.value && !!effectiveTime.value)
+const canAddons = computed(() => !!date.value && !!effectiveTime.value && dayInfo.value?.state !== 'full')
 const summaryTime = computed(() => effectiveTime.value || '—')
 
 /* ---------- navigation ---------- */
@@ -212,9 +234,13 @@ async function copy() {
   setTimeout(() => { copyLabel.value = 'Copy request' }, 1800)
 }
 
-const noticeNote = computed(() => service.value
-  ? `${service.value.name} need at least ${service.value.notice} days' notice. Crossed dates are already booked.`
-  : 'Crossed dates are already booked.')
+const noticeNote = computed(() => {
+  const svc = service.value
+  const key = svc?.times
+    ? 'A date with a copper corner still has start times open; crossed dates are fully booked.'
+    : 'A date with a copper corner has another booking that day but room for yours; crossed dates are fully booked.'
+  return svc ? `${svc.name} need at least ${svc.notice} days' notice. ${key}` : key
+})
 const addonIntro = computed(() => service.value?.addons.length
   ? 'Everything here is optional. The total on the right updates as you go.'
   : 'No add-ons for this service yet — tell us in the notes what else you need and we will quote it.')
@@ -222,8 +248,14 @@ const addonIntro = computed(() => service.value?.addons.length
 
 <template>
   <div>
-    <p v-if="!api.api" class="preview-note" role="note">
+    <p v-if="api.mode.value === 'loading'" class="preview-note preview-note--live" role="status">
+      <span class="dot dot--wait" aria-hidden="true" />Checking the studio calendar…
+    </p>
+    <p v-else-if="api.mode.value === 'preview'" class="preview-note" role="note">
       <span class="dot" aria-hidden="true" />Preview mode · sample availability
+    </p>
+    <p v-else-if="api.mode.value === 'unavailable'" class="preview-note" role="note">
+      <span class="dot" aria-hidden="true" />Live calendar unreachable · every date shown open, confirmed by reply
     </p>
     <p class="sr-only" aria-live="polite">{{ announce }}</p>
 
@@ -249,9 +281,9 @@ const addonIntro = computed(() => service.value?.addons.length
           <h2 id="s2-h" class="display h3 bstep__h">When is it?</h2>
           <p class="muted bstep__p">{{ noticeNote }}</p>
           <div class="mt-5">
-            <BookingAvailabilityCalendar v-model="date" :blocked="api.blocked.value" :notice="service?.notice ?? 3" />
+            <BookingAvailabilityCalendar v-model="date" :busy="busy" :hours="service?.hours ?? 1" :timed="service?.times ?? true" :slots="SLOTS" :notice="service?.notice ?? 3" :loading="api.mode.value === 'loading'" />
           </div>
-          <BookingSlotList v-if="service?.times" v-model="time" :slots="SLOTS" />
+          <BookingSlotList v-if="service?.times" v-model="time" :slots="SLOTS" :taken="takenSlots" :waiting="api.mode.value === 'loading'" />
           <div class="bactions">
             <BaseButton type="button" @click="go(1)">← Back</BaseButton>
             <BaseButton variant="copper" type="button" :disabled="!canAddons" arrow @click="go(3)">Add-ons</BaseButton>
@@ -262,7 +294,7 @@ const addonIntro = computed(() => service.value?.addons.length
         <section v-else-if="step === 3" key="3" class="bstep" aria-labelledby="s3-h">
           <h2 id="s3-h" class="display h3 bstep__h">Anything extra?</h2>
           <p class="muted bstep__p">{{ addonIntro }}</p>
-          <BookingAddonStepper v-if="service" :addons="service.addons" :qty="quote.qty" @bump="quote.bump" />
+          <BookingAddonStepper v-if="service" :addons="service.addons" :qty="quote.qty" :caps="addonCaps" @bump="quote.bump" />
           <div class="bactions">
             <BaseButton type="button" @click="go(2)">← Back</BaseButton>
             <BaseButton variant="copper" type="button" arrow @click="go(4)">Your details</BaseButton>
@@ -452,6 +484,9 @@ const addonIntro = computed(() => service.value?.addons.length
   letter-spacing: .1em; text-transform: uppercase; color: var(--tm-sys-color-secondary-hover);
   border: 1px dashed var(--tm-sys-color-secondary-container); border-radius: var(--tm-sys-shape-corner); padding: 6px 11px; margin: 0 0 var(--tm-sys-space-5);
 }
+.dot--wait { animation: dotwait 1.4s var(--tm-sys-motion-easing-standard) infinite; }
+@keyframes dotwait { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+.preview-note--live { color: var(--tm-sys-color-primary-hover); border: 1px solid var(--tm-sys-color-primary-container); }
 .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
 /* a step slides the way the user went: forward from the right, back from the left */
 .step-fwd-enter-active, .step-back-enter-active { transition: opacity var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-decelerate), transform var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-decelerate); }

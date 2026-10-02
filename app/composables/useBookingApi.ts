@@ -1,47 +1,54 @@
-import { addDays, addMonths, iso } from '~/utils/dates'
+import { sampleBusy, type Busy } from '~/utils/availability'
 
-/* Backend: a Google Apps Script web app running in Tsolofelo's own Google
-   account. Set NUXT_PUBLIC_BOOKING_API to its /exec URL and the page goes
-   live — reads real availability from the calendar and posts real requests.
-   Left blank, the page runs in preview mode on sample data so it can still
-   be clicked through.
+/* Availability and submission for the booking wizard.
 
-   Note on the POST: Apps Script rejects a pre-flighted CORS request, so the
-   body is sent as text/plain (a "simple request") and parsed as JSON
-   server-side. Do not change that header. */
+   Availability comes from the studio's own calendar through
+   /api/availability (see server/api/availability.get.ts): the photographer
+   adds a booking to their calendar and the site shows that time as taken.
+   Four modes:
+     loading      the calendar has not answered yet; the grid shows a skeleton
+     live         the calendar answered; busy holds its intervals
+     preview      no calendar is configured; sample data, with a notice
+     unavailable  a calendar is configured but could not be read; every date
+                  is shown open with a notice, and the studio confirms by reply
+
+   Submission: an optional Google Apps Script web app at
+   NUXT_PUBLIC_BOOKING_API. Apps Script rejects a pre-flighted CORS request,
+   so the body is sent as text/plain (a "simple request") and parsed as JSON
+   server-side. Do not change that header. Without it the wizard posts to
+   the site's own /api/send.
+
+   NUXT_PUBLIC_* values are shipped to every browser. Only an Apps Script
+   address is accepted here; anything else (a calendar address pasted into
+   the wrong variable, say) is ignored, so the browser is never sent to it.
+   The calendar address belongs in NUXT_CALENDAR_ICS_URL, which stays on the
+   server. */
 
 export interface BookingResponse { ok: boolean; ref?: string; error?: string }
+export type AvailabilityMode = 'loading' | 'live' | 'preview' | 'unavailable'
 
-/** Sample availability for preview mode: a believable scatter of taken dates. */
-export function sampleBlocked(now = new Date()): string[] {
-  const out: string[] = []
-  for (let i = 3; i < 150; i += 1) {
-    const d = addDays(now, i)
-    const dow = d.getDay()
-    if ((dow === 6 && i % 3 === 0) || (dow === 0 && i % 5 === 0) || i % 17 === 0) out.push(iso(d))
-  }
-  return out
+/** An Apps Script web app address, and nothing else. */
+export function appsScriptUrl(value: unknown): string {
+  const v = typeof value === 'string' ? value.trim() : ''
+  return /^https:\/\/script\.google(usercontent)?\.com\/.+/i.test(v) ? v : ''
 }
 
 export function useBookingApi() {
-  const api = useRuntimeConfig().public.bookingApi as string
-  const live = ref(false)
-  const blocked = ref<string[]>([])
-  const loading = ref(false)
+  const api = appsScriptUrl(useRuntimeConfig().public.bookingApi)
+  // 'loading' until the calendar has answered: the page never claims a mode it
+  // has not confirmed, and dates stay unselectable until it knows what is free
+  const mode = ref<AvailabilityMode>('loading')
+  const busy = ref<Busy[]>([])
 
   async function loadAvailability() {
-    if (!api) { blocked.value = sampleBlocked(); live.value = false; return }
-    loading.value = true
     try {
-      const from = new Date()
-      const to = addMonths(from, 14)
-      const r = await fetch(`${api}?action=availability&from=${iso(from)}&to=${iso(to)}`)
-      const j = await r.json()
-      blocked.value = j.blocked || []
-      live.value = true
+      const r = await $fetch<{ live: boolean; configured: boolean; busy: Busy[] }>('/api/availability')
+      if (r.live) { busy.value = r.busy; mode.value = 'live'; return }
+      if (r.configured) { busy.value = []; mode.value = 'unavailable'; return }
+      busy.value = sampleBusy(); mode.value = 'preview'
     } catch {
-      blocked.value = sampleBlocked(); live.value = false
-    } finally { loading.value = false }
+      busy.value = []; mode.value = 'unavailable'
+    }
   }
 
   /** Resolves ok:true in preview mode after a short pause, so the flow can be walked. */
@@ -58,5 +65,5 @@ export function useBookingApi() {
     return j
   }
 
-  return { api, live, blocked, loading, loadAvailability, submit }
+  return { api, mode, busy, loadAvailability, submit }
 }

@@ -1,10 +1,10 @@
-// Local-only Cloudflare bindings for `nuxt dev` (the CMS proof of concept).
+// Local-only Cloudflare bindings for `nuxt dev`.
 //
 // Deliberately NOT named wrangler.json/jsonc/toml: Nitro merges a file with
 // one of those names into the production deploy config, and this database id
-// is a placeholder. When the client signs off, create the real database
-// (`wrangler d1 create tmiladzi-cms`), move this block into wrangler.jsonc
-// with the id it prints, and add a migrations step to the deploy workflow.
+// is a placeholder. Production gets its database id from the pipeline
+// (repo variable CLOUDFLARE_D1_DATABASE_ID, see nuxt.config.ts and
+// .github/workflows/deploy.yml).
 {
   "name": "tmiladzi",
   "compatibility_date": "2025-07-15",

@@ -8,18 +8,14 @@ import { createRemoteJWKSet, jwtVerify } from 'jose'
    way round Access (a pages.dev preview URL, a misconfigured policy) still
    carries no valid token and is refused.
 
-   The studio's Access application is built in below. Neither value is a
-   secret (Cloudflare puts both in every sign-in token), and shipping them
-   with the code means they cannot go missing from a deployment: dashboard
-   variables were being dropped because the build deploys its own wrangler
-   config. NUXT_ACCESS_TEAM_DOMAIN and NUXT_ACCESS_AUD still override them,
-   e.g. for a different Access team.
+   NUXT_ACCESS_TEAM_DOMAIN  e.g. tmiladzi.cloudflareaccess.com
+   NUXT_ACCESS_AUD          the Access application's "Application Audience (AUD) Tag"
 
-   Local dev ignores the built-in values and signs everyone in as
-   dev@localhost. A deployment with no values refuses every admin request
-   (fails closed). */
-const ACCESS_TEAM_DOMAIN = 'crimson-surf-accf.cloudflareaccess.com'
-const ACCESS_AUD = '788eaeb7adb305289c2cda78f0c042861d655e8a132c4ca073e063dcffb23864'
+   Set as GitHub repo variables and passed in at build (see nuxt.config.ts),
+   or as Cloudflare Pages secrets, read here at runtime.
+
+   Without both: local dev signs everyone in as dev@localhost; a deployment
+   refuses every admin request (fails closed). */
 
 export interface AdminIdentity { email: string }
 
@@ -32,9 +28,10 @@ const keySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 export async function requireAdmin(event: H3Event): Promise<AdminIdentity> {
   const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
   const config = useRuntimeConfig(event)
-  const team = String(config.accessTeamDomain || cfEnv.NUXT_ACCESS_TEAM_DOMAIN || (import.meta.dev ? '' : ACCESS_TEAM_DOMAIN))
+  // runtime secrets first, so a dashboard value can replace what the build carried
+  const team = String(cfEnv.NUXT_ACCESS_TEAM_DOMAIN || config.accessTeamDomain || '').trim()
     .replace(/^https?:\/\//, '').replace(/\/+$/, '')
-  const aud = String(config.accessAud || cfEnv.NUXT_ACCESS_AUD || (import.meta.dev ? '' : ACCESS_AUD))
+  const aud = String(cfEnv.NUXT_ACCESS_AUD || config.accessAud || '').trim()
 
   if (!team || !aud) {
     if (import.meta.dev) return { email: 'dev@localhost' }

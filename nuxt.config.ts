@@ -25,11 +25,14 @@ export default defineNuxtConfig({
     // (NUXT_CALENDAR_ICS_URL). The booking page reads live availability from
     // it; blank means preview mode on sample data.
     calendarIcsUrl: '',
-    // Cloudflare Zero Trust Access in front of /admin. The studio's team and
-    // AUD are built into server/utils/access.ts; NUXT_ACCESS_TEAM_DOMAIN and
-    // NUXT_ACCESS_AUD override them. Local dev signs in as dev@localhost.
-    accessTeamDomain: '',
-    accessAud: '',
+    // Cloudflare Zero Trust Access in front of /admin (server/utils/access.ts).
+    // Read at build time: the deploy workflow passes the repo variables
+    // NUXT_ACCESS_TEAM_DOMAIN and NUXT_ACCESS_AUD in, because Pages drops
+    // plain dashboard variables when the build ships its own wrangler config.
+    // Dashboard secrets of the same names still override at runtime. Leave
+    // them out of .env and local dev signs in as dev@localhost.
+    accessTeamDomain: process.env.NUXT_ACCESS_TEAM_DOMAIN || '',
+    accessAud: process.env.NUXT_ACCESS_AUD || '',
     public: {
       // Optional Google Apps Script /exec URL for booking submissions. Empty
       // means requests go through the site's own /api/send.
@@ -78,7 +81,17 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-pages',
     // dev.configPath: local D1 for the CMS; kept out of the deploy config (see the file).
-    cloudflare: { deployConfig: true, nodeCompat: true, dev: { configPath: 'wrangler.dev.jsonc' } },
+    // The CMS database (D1) is bound only when the pipeline supplies its id
+    // (repo variable CLOUDFLARE_D1_DATABASE_ID); without it the site serves
+    // the built-in catalogue. Must match the database the deploy workflow migrates.
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+      dev: { configPath: 'wrangler.dev.jsonc' },
+      wrangler: process.env.CLOUDFLARE_D1_DATABASE_ID
+        ? { d1_databases: [{ binding: 'DB', database_name: 'tmiladzi-cms', database_id: process.env.CLOUDFLARE_D1_DATABASE_ID }] }
+        : {},
+    },
     // Flat files (work.html, not work/index.html): Cloudflare Pages then serves
     // /work as-is instead of redirecting to /work/, which kept the client
     // router's path from matching the server's and broke same-page navigation.

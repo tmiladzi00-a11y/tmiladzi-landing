@@ -7,6 +7,10 @@
 #   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
 #   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
 #   secrets.NUXT_PUBLIC_BOOKING_API  optional Apps Script /exec URL for submissions; blank = /api/send
+#   vars.NUXT_ACCESS_TEAM_DOMAIN     Cloudflare Access team, e.g. xxx.cloudflareaccess.com (admin sign-in)
+#   vars.NUXT_ACCESS_AUD             the Access application's Audience (AUD) tag (admin sign-in)
+#   vars.CLOUDFLARE_D1_DATABASE_ID   id of the tmiladzi-cms D1 database; blank = no CMS, built-in prices
+# With the database set, CLOUDFLARE_API_TOKEN also needs "D1: Edit".
 name: Deploy
 
 on:
@@ -49,11 +53,24 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
+      # Admin sign-in still builds without these, but every /admin request is
+      # then refused. Say so in the run summary rather than failing the deploy.
+      - name: Check admin sign-in settings
+        env:
+          TEAM: ${{ vars.NUXT_ACCESS_TEAM_DOMAIN || secrets.NUXT_ACCESS_TEAM_DOMAIN }}
+          AUD: ${{ vars.NUXT_ACCESS_AUD || secrets.NUXT_ACCESS_AUD }}
+        run: |
+          test -n "$TEAM" && test -n "$AUD" \
+            || echo "::warning::NUXT_ACCESS_TEAM_DOMAIN / NUXT_ACCESS_AUD are not set as repo variables; /admin will refuse every request unless they are Cloudflare Pages secrets"
+
       - name: Build
         run: bun run build
         env:
           NUXT_PUBLIC_BOOKING_API: ${{ secrets.NUXT_PUBLIC_BOOKING_API }}
           NUXT_PUBLIC_SITE_URL: https://tmiladzi.com
+          NUXT_ACCESS_TEAM_DOMAIN: ${{ vars.NUXT_ACCESS_TEAM_DOMAIN || secrets.NUXT_ACCESS_TEAM_DOMAIN }}
+          NUXT_ACCESS_AUD: ${{ vars.NUXT_ACCESS_AUD || secrets.NUXT_ACCESS_AUD }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -113,6 +130,29 @@ jobs:
               | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d); sys.exit(0 if d.get("success") else 1)' \
               || { echo "::error::Could not set the production branch to main; change it in the Pages dashboard"; exit 1; }
           fi
+
+      # The CMS schema, before the code that needs it goes live. Production
+      # only: previews read the same database but never change its shape.
+      # The first run creates the tables and loads the current prices; later
+      # runs apply only new files in server/database/migrations, so the
+      # studio's edits are never overwritten.
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push' && vars.CLOUDFLARE_D1_DATABASE_ID != ''
+        with:
+          path: repo
+          sparse-checkout: server/database/migrations
+
+      - name: Apply CMS database migrations
+        if: github.event_name == 'push' && vars.CLOUDFLARE_D1_DATABASE_ID != ''
+        env:
+          D1_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+        working-directory: repo
+        run: |
+          cat > wrangler.migrate.json <<EOF
+          { "name": "tmiladzi", "d1_databases": [{ "binding": "DB", "database_name": "tmiladzi-cms",
+            "database_id": "$D1_ID", "migrations_dir": "server/database/migrations" }] }
+          EOF
+          npx --yes wrangler@4 d1 migrations apply DB --remote -c wrangler.migrate.json
 
       - name: Publish
         id: publish

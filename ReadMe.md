@@ -37,6 +37,9 @@ Repository settings it needs:
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | The account that owns the Pages project |
 | Secret | `NUXT_PUBLIC_BOOKING_API` | Optional Apps Script `/exec` URL for submissions; unset means `/api/send` |
 | Variable | `CLOUDFLARE_PAGES_PROJECT` | Pages project name; defaults to `tmiladzi` if unset |
+| Variable | `NUXT_ACCESS_TEAM_DOMAIN` | Cloudflare Access team for admin sign-in, e.g. `xxx.cloudflareaccess.com` |
+| Variable | `NUXT_ACCESS_AUD` | The Access application's Application Audience (AUD) tag |
+| Variable | `CLOUDFLARE_D1_DATABASE_ID` | Id of the `tmiladzi-cms` D1 database. Unset: no CMS, the site serves its built-in prices. Set: the token above also needs "D1: Edit" |
 
 Form delivery runs in the worker and needs three environment variables set
 on the Pages project itself (Cloudflare dashboard, the project, Settings,
@@ -140,17 +143,22 @@ npm run cms:reset    # wipe local edits back to the seed
 ```
 
 - **Sign-in** is Cloudflare Zero Trust Access on `/admin*` and `/api/admin*`;
-  the API also verifies the Access token (`server/utils/access.ts`, which
-  has the studio's team domain and AUD built in; neither is secret, and
-  `NUXT_ACCESS_TEAM_DOMAIN` / `NUXT_ACCESS_AUD` override them). Locally you
-  are signed in as `dev@localhost`.
+  the API also verifies the Access token (`server/utils/access.ts`) against
+  `NUXT_ACCESS_TEAM_DOMAIN` and `NUXT_ACCESS_AUD`. Set them as GitHub repo
+  variables (the deploy workflow passes them to the build); plain Pages
+  dashboard variables do not reach the worker because the build ships its
+  own wrangler config, though Pages *secrets* do. Without them, a deployment
+  refuses every admin request. Locally you are signed in as `dev@localhost`.
 - **No database bound** (today's production): the site uses the built-in
   prices in `app/content/services.ts`, exactly as before.
 - **Local binding** is in `wrangler.dev.jsonc`, deliberately not
   `wrangler.jsonc`, so the placeholder database id never reaches a deploy.
-- **To go live:** `wrangler d1 create tmiladzi-cms`, put the binding with
-  its real id in `wrangler.jsonc`, apply migrations with `--remote`, add a
-  migrations step to the deploy workflow, and make sure the Access
+- **Production database:** create a D1 database named `tmiladzi-cms`
+  (dashboard: Storage & Databases, D1), set its id as the repo variable
+  `CLOUDFLARE_D1_DATABASE_ID` and add "D1: Edit" to the API token. The build
+  then binds it as `DB`, and each production deploy applies
+  `server/database/migrations` before publishing (the first run loads the
+  current prices; later runs only add new migrations). Make sure the Access
   application covers both `tmiladzi.com/admin` and `tmiladzi.com/api/admin`.
 
 ## Where things are

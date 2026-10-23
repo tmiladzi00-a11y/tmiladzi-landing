@@ -11,6 +11,9 @@
 #   vars.NUXT_ACCESS_AUD             the Access application's Audience (AUD) tag (admin sign-in)
 #   vars.CLOUDFLARE_D1_DATABASE_ID   id of the tmiladzi-cms D1 database; blank = no CMS, built-in prices
 # With the database set, CLOUDFLARE_API_TOKEN also needs "D1: Edit".
+# The NUXT_ACCESS_* and CLOUDFLARE_D1_DATABASE_ID values may be repository
+# variables or repository secrets, but not "production" environment values:
+# the build job has no environment, so it would never see them.
 name: Deploy
 
 on:
@@ -53,15 +56,22 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      # Admin sign-in still builds without these, but every /admin request is
-      # then refused. Say so in the run summary rather than failing the deploy.
-      - name: Check admin sign-in settings
+      # The site still builds without these: admin then refuses every request,
+      # and without the database it serves the built-in prices. Say so in the
+      # run summary rather than failing the deploy.
+      - name: Check CMS settings
         env:
           TEAM: ${{ vars.NUXT_ACCESS_TEAM_DOMAIN || secrets.NUXT_ACCESS_TEAM_DOMAIN }}
           AUD: ${{ vars.NUXT_ACCESS_AUD || secrets.NUXT_ACCESS_AUD }}
+          D1_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID || secrets.CLOUDFLARE_D1_DATABASE_ID }}
         run: |
           test -n "$TEAM" && test -n "$AUD" \
-            || echo "::warning::NUXT_ACCESS_TEAM_DOMAIN / NUXT_ACCESS_AUD are not set as repo variables; /admin will refuse every request unless they are Cloudflare Pages secrets"
+            || echo "::warning::NUXT_ACCESS_TEAM_DOMAIN / NUXT_ACCESS_AUD are not visible to the build; /admin will refuse every request unless they are Cloudflare Pages secrets"
+          if [ -n "$D1_ID" ]; then
+            echo "CMS database bound: ${D1_ID:0:8}…"
+          else
+            echo "::warning::CLOUDFLARE_D1_DATABASE_ID is not visible to the build (set it as a repository variable); the site will serve its built-in prices"
+          fi
 
       - name: Build
         run: bun run build
@@ -70,7 +80,7 @@ jobs:
           NUXT_PUBLIC_SITE_URL: https://tmiladzi.com
           NUXT_ACCESS_TEAM_DOMAIN: ${{ vars.NUXT_ACCESS_TEAM_DOMAIN || secrets.NUXT_ACCESS_TEAM_DOMAIN }}
           NUXT_ACCESS_AUD: ${{ vars.NUXT_ACCESS_AUD || secrets.NUXT_ACCESS_AUD }}
-          CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID || secrets.CLOUDFLARE_D1_DATABASE_ID }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -90,6 +100,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'tmiladzi' }}
       BRANCH: ${{ github.event_name == 'push' && 'main' || github.head_ref }}
+      D1_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID || secrets.CLOUDFLARE_D1_DATABASE_ID }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -137,15 +148,13 @@ jobs:
       # runs apply only new files in server/database/migrations, so the
       # studio's edits are never overwritten.
       - uses: actions/checkout@v4
-        if: github.event_name == 'push' && vars.CLOUDFLARE_D1_DATABASE_ID != ''
+        if: github.event_name == 'push' && env.D1_ID != ''
         with:
           path: repo
           sparse-checkout: server/database/migrations
 
       - name: Apply CMS database migrations
-        if: github.event_name == 'push' && vars.CLOUDFLARE_D1_DATABASE_ID != ''
-        env:
-          D1_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+        if: github.event_name == 'push' && env.D1_ID != ''
         working-directory: repo
         run: |
           cat > wrangler.migrate.json <<EOF

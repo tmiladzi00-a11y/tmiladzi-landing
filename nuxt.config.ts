@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+/** Production CMS database id from the pipeline; trimmed, since a pasted value often carries a newline. */
+const d1DatabaseId = process.env.CLOUDFLARE_D1_DATABASE_ID?.trim()
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
@@ -88,8 +91,8 @@ export default defineNuxtConfig({
       deployConfig: true,
       nodeCompat: true,
       dev: { configPath: 'wrangler.dev.jsonc' },
-      wrangler: process.env.CLOUDFLARE_D1_DATABASE_ID
-        ? { d1_databases: [{ binding: 'DB', database_name: 'tmiladzi-cms', database_id: process.env.CLOUDFLARE_D1_DATABASE_ID }] }
+      wrangler: d1DatabaseId
+        ? { d1_databases: [{ binding: 'DB', database_name: 'tmiladzi-cms', database_id: d1DatabaseId }] }
         : {},
     },
     // Flat files (work.html, not work/index.html): Cloudflare Pages then serves

@@ -67,10 +67,14 @@ jobs:
         run: |
           test -n "$TEAM" && test -n "$AUD" \
             || echo "::warning::NUXT_ACCESS_TEAM_DOMAIN / NUXT_ACCESS_AUD are not visible to the build; /admin will refuse every request unless they are Cloudflare Pages secrets"
-          if [ -n "$D1_ID" ]; then
-            echo "CMS database bound: ${D1_ID:0:8}…"
-          else
+          D1_ID=$(printf %s "$D1_ID" | tr -d '[:space:]')
+          if [ -z "$D1_ID" ]; then
             echo "::warning::CLOUDFLARE_D1_DATABASE_ID is not visible to the build (set it as a repository variable); the site will serve its built-in prices"
+          elif ! printf %s "$D1_ID" | grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
+            echo "::error::CLOUDFLARE_D1_DATABASE_ID is not a database id. It must be the Database ID shown on the tmiladzi-cms page in D1 (like 1a2b3c4d-1a2b-1a2b-1a2b-1a2b3c4d5e6f), not the database name"
+            exit 1
+          else
+            echo "CMS database bound: ${D1_ID:0:8}…"
           fi
 
       - name: Build
@@ -157,11 +161,18 @@ jobs:
         if: github.event_name == 'push' && env.D1_ID != ''
         working-directory: repo
         run: |
+          D1_ID=$(printf %s "$D1_ID" | tr -d '[:space:]')
           cat > wrangler.migrate.json <<EOF
           { "name": "tmiladzi", "d1_databases": [{ "binding": "DB", "database_name": "tmiladzi-cms",
             "database_id": "$D1_ID", "migrations_dir": "server/database/migrations" }] }
           EOF
-          npx --yes wrangler@4 d1 migrations apply DB --remote -c wrangler.migrate.json
+          npx --yes wrangler@4 d1 migrations apply DB --remote -c wrangler.migrate.json || {
+            # most often the id belongs to another account, or is mistyped:
+            # show what this token can see in CLOUDFLARE_ACCOUNT_ID
+            echo "::error::Migrations failed. Databases visible to this token in this account are listed below; CLOUDFLARE_D1_DATABASE_ID must be the id of tmiladzi-cms"
+            npx --yes wrangler@4 d1 list || true
+            exit 1
+          }
 
       - name: Publish
         id: publish

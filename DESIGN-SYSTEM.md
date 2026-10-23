@@ -357,9 +357,9 @@ Work grid, case-study hero and gallery, and the showreel.
 `BookingStepIndicator` (an `<ol>` with `aria-current="step"`),
 `BookingServicePicker` (radio cards in a `<fieldset>`),
 `BookingAvailabilityCalendar` (Monday-first month grid of buttons with
-full-date labels, notice-period floor, open / partial / full states from the
-studio calendar, 13-month horizon,
-compact density), `BookingSlotList` (radio chips), `BookingAddonStepper`
+full-date labels, past dates disabled, open / partial / full states read
+straight off the studio calendar (the same for every package), 13-month horizon,
+compact density), `BookingSlotList` (one-hour chips; two taps pick a first and last hour, toggle buttons with `aria-pressed`), `BookingAddonStepper`
 (stepper or toggle per add-on, per-add-on max, compact density) and
 `BookingSummary` (sticky rail; line items animate in and the total ticks
 when it changes; the total is a live region). A visually hidden live region
@@ -384,16 +384,16 @@ out as six numbered `<fieldset>`s because the copy promises six questions.
 private iCal feed, runs it through `server/utils/ics.ts` and returns busy
 intervals as `{ s, e }` in epoch ms, cached at the edge for two minutes.
 The parser keeps nothing but start and end, so no title or name can reach a
-browser. `app/utils/availability.ts` holds the slot rules as pure functions,
-tested in `tests/availability.test.ts`: `slotFree` (do the service's hours
-fit from this start time), `freeWindowFits` (is there a clear run inside the
-working day, for full-day services), `dayAvailability` (open, partial, full)
-and `maxExtraHours` (how far Additional time can stretch before the next
-booking). All times are studio time, UTC+2.
+browser, and skips cancelled events and events shown as Free.
+`app/utils/availability.ts` holds the slot rules as pure functions, tested
+in `tests/availability.test.ts`: `dayAvailability` (which one-hour blocks
+from 07:00 to 18:00 a booking overlaps, and open / partial / full for the
+date) and `bookedRanges` (the day's bookings, listed under the calendar).
+The rule is the same for every package. All times are studio time, UTC+2.
 
 In the UI a date has three states. Open is the plain cell. Partial carries a
-copper corner and stays selectable. Full is hatched and disabled. Start
-times that clash stay on the row, struck through with the same hatch, so
+copper corner and stays selectable. Full is hatched and disabled. Hours
+that are booked stay on the row, struck through with the same hatch, so
 the visitor sees the shape of the day. A selected date or time keeps its
 copper fill under hover. The mode line above the steps reads "Checking the
 studio calendar…" until the feed answers, then disappears once

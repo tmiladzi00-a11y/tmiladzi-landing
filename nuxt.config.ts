@@ -25,6 +25,11 @@ export default defineNuxtConfig({
     // (NUXT_CALENDAR_ICS_URL). The booking page reads live availability from
     // it; blank means preview mode on sample data.
     calendarIcsUrl: '',
+    // Cloudflare Zero Trust Access in front of /admin (see server/utils/access.ts):
+    // NUXT_ACCESS_TEAM_DOMAIN (xxx.cloudflareaccess.com) and NUXT_ACCESS_AUD.
+    // Blank: admin open in local dev, refused when deployed.
+    accessTeamDomain: '',
+    accessAud: '',
     public: {
       // Optional Google Apps Script /exec URL for booking submissions. Empty
       // means requests go through the site's own /api/send.
@@ -62,9 +67,18 @@ export default defineNuxtConfig({
   // and served as files; the small worker that ships alongside handles
   // /api/* (form delivery) and anything not prerendered. Nitro writes the
   // wrangler.json and enables Node compatibility itself.
+  // The booking and packages pages read prices from the CMS (/api/catalog), so
+  // they render per request instead of at build time. The admin is a
+  // client-side app behind Cloudflare Access and is never indexed.
+  routeRules: {
+    '/booking': { prerender: false },
+    '/celebrations': { prerender: false },
+    '/admin/**': { ssr: false, prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+  },
   nitro: {
     preset: 'cloudflare-pages',
-    cloudflare: { deployConfig: true, nodeCompat: true },
+    // dev.configPath: local D1 for the CMS; kept out of the deploy config (see the file).
+    cloudflare: { deployConfig: true, nodeCompat: true, dev: { configPath: 'wrangler.dev.jsonc' } },
     // Flat files (work.html, not work/index.html): Cloudflare Pages then serves
     // /work as-is instead of redirecting to /work/, which kept the client
     // router's path from matching the server's and broke same-page navigation.

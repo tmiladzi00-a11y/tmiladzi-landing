@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { SERVICES, SLOTS } from '~/content/services'
-import type { Service } from '~/content/types'
+import type { BookingSettings, Service } from '~/content/types'
 import { SITE } from '~/content/site'
 import { TERMS_VERSION, PRIVACY_VERSION } from '~/content/terms'
 import { useBookingQuote } from '~/composables/useBookingQuote'
@@ -9,26 +8,34 @@ import { useTermsFingerprint } from '~/composables/useTermsFingerprint'
 import { copyText } from '~/composables/useClipboard'
 import { fmtDate } from '~/utils/dates'
 import { fmtMoney } from '~/utils/money'
-import { dayAvailability, maxExtraHours, MAX_EXTRA_HOURS } from '~/utils/availability'
+import { dayAvailability, bookedRanges, rangeLabel } from '~/utils/availability'
+import { hourlySlots } from '~/utils/catalog'
+
+/* Packages, bookable hours and form choices come from the CMS via the page. */
+const props = defineProps<{ services: Service[]; settings: BookingSettings }>()
 
 const STEPS = ['Coverage', 'Date', 'Add-ons', 'Details', 'Confirm']
-const REGIONS = ['Within the Copperbelt', 'Outside the Copperbelt', 'Outside Zambia']
-const HEARD = ['Referred by a venue or vendor', 'Referred by a friend or family', 'Instagram', 'Facebook', 'Google', 'Saw your work at an event', 'Other']
+const REGIONS = computed(() => props.settings.regions)
+const HEARD = computed(() => props.settings.heard)
+const SLOTS = computed(() => hourlySlots(props.settings.dayStart, props.settings.dayEnd))
+const DAY_END = computed(() => props.settings.dayEnd)
 
 /* ---------- state ---------- */
 const step = ref(1)
 const dir = ref(1)
 const serviceId = ref<string | null>(null)
-const service = computed<Service | null>(() => SERVICES.find((s) => s.id === serviceId.value) ?? null)
+const service = computed<Service | null>(() => props.services.find((s) => s.id === serviceId.value) ?? null)
 const date = ref<string | null>(null)
-const time = ref<string | null>(null)
+const start = ref<string | null>(null)
+/** Length of the chosen run of hour blocks. */
+const hours = ref(1)
 const quote = useBookingQuote(service)
 const api = useBookingApi()
 const fingerprint = useTermsFingerprint()
 
 const f = reactive({
-  name: '', partner: '', email: '', phone: '', venue: '', region: REGIONS[0]!, guests: '',
-  heard: HEARD[0]!, notes: '', terms: false, marketing: false,
+  name: '', partner: '', email: '', phone: '', venue: '', region: REGIONS.value[0] ?? '', guests: '',
+  heard: HEARD.value[0] ?? '', notes: '', terms: false, marketing: false,
 })
 const fieldErr = reactive<{ name?: string; email?: string; phone?: string }>({})
 const formErr = ref('')
@@ -47,34 +54,40 @@ const announce = ref('')
 onMounted(() => { api.loadAvailability() })
 
 watch(serviceId, () => {
-  date.value = null; time.value = null; quote.reset()
+  date.value = null; start.value = null; quote.reset()
 })
 
 /* ---------- availability for the chosen day ---------- */
 const busy = api.busy
-const dayInfo = computed(() => (service.value && date.value ? dayAvailability(busy.value, date.value, service.value, SLOTS) : null))
+const dayInfo = computed(() => (date.value ? dayAvailability(busy.value, date.value, SLOTS.value) : null))
+const booked = computed(() => (date.value && api.mode.value === 'live' ? bookedRanges(busy.value, date.value) : []))
 const takenSlots = computed(() => dayInfo.value?.taken ?? [])
-// a time picked on one day may be taken on another, or the calendar may arrive
+const run = computed(() => {
+  const i = start.value ? SLOTS.value.indexOf(start.value) : -1
+  return i < 0 ? [] : SLOTS.value.slice(i, i + hours.value)
+})
+const end = computed(() => {
+  const last = run.value.length ? SLOTS.value.indexOf(run.value[run.value.length - 1]!) : -1
+  return last < 0 ? null : SLOTS.value[last + 1] ?? DAY_END.value
+})
+const timeText = computed(() => (start.value && end.value ? rangeLabel(start.value, end.value, hours.value) : null))
+// hours picked on one day may be taken on another, or the calendar may arrive
 // after the choice was made: never carry a clashing selection forward
-watch([date, takenSlots], () => { if (time.value && takenSlots.value.includes(time.value)) time.value = null })
-watch(dayInfo, (d) => { if (d?.state === 'full') { date.value = null; time.value = null } })
+watch([date, takenSlots], () => { if (run.value.some((t) => takenSlots.value.includes(t))) start.value = null })
+watch(dayInfo, (d) => { if (d?.state === 'full') { date.value = null; start.value = null } })
 
-/* extra hours may not run into the next booking */
-const timeAddon = computed(() => service.value?.addons.find((a) => a.id === 'time'))
-const addonCaps = computed<Record<string, number>>(() => {
-  const svc = service.value, a = timeAddon.value
-  const caps: Record<string, number> = {}
-  if (svc && a && date.value) caps.time = maxExtraHours(busy.value, date.value, svc.times ? time.value : null, svc, a.max ?? MAX_EXTRA_HOURS)
-  return caps
+/* hours beyond what the package includes are billed as its "Additional time" */
+const extraHours = computed(() => (service.value && start.value ? Math.max(0, hours.value - service.value.hours) : 0))
+watch([extraHours, service], ([n, svc]) => {
+  if (!svc?.addons.some((a) => a.id === 'time') || quote.qty('time') === n) return
+  const { time: _, ...rest } = quote.add.value
+  quote.add.value = n ? { ...rest, time: n } : rest
 })
-watch(addonCaps, (c) => {
-  if (c.time != null && quote.qty('time') > c.time) quote.add.value = { ...quote.add.value, time: c.time }
-})
+const stepAddons = computed(() => service.value?.addons.filter((a) => a.id !== 'time') ?? [])
 
-const effectiveTime = computed(() => (service.value && !service.value.times ? 'Full day' : time.value))
 const canDate = computed(() => !!service.value)
-const canAddons = computed(() => !!date.value && !!effectiveTime.value && dayInfo.value?.state !== 'full')
-const summaryTime = computed(() => effectiveTime.value || '—')
+const canAddons = computed(() => !!date.value && !!timeText.value && dayInfo.value?.state !== 'full')
+const summaryTime = computed(() => timeText.value || '—')
 
 /* ---------- navigation ---------- */
 function go(n: number) {
@@ -103,7 +116,7 @@ function collect() {
     addons, total: t.total, tbq: t.tbc,
     deposit: t.deposit, depositPct: t.depositPct,
     delivery: quote.deliveryNumber.value, deliveryText: quote.delivery.value,
-    date: date.value!, dateLabel: fmtDate(date.value!), time: effectiveTime.value || 'To confirm',
+    date: date.value!, dateLabel: fmtDate(date.value!), time: timeText.value || 'To confirm', start: start.value, end: end.value, hours: hours.value,
     name: f.name.trim(), partner: f.partner.trim(), email: f.email.trim(), phone: f.phone.trim(),
     venue: f.venue.trim(), region: f.region, guests: f.guests.trim(),
     notes: f.notes.trim(), heard: f.heard,
@@ -121,7 +134,7 @@ const reviewRows = computed<[string, string][]>(() => {
   if (!d) return []
   const rows: [string, string][] = [
     ['Coverage', d.service + ' · ' + d.coverage],
-    ['Date', d.dateLabel], ['Start time', d.time],
+    ['Date', d.dateLabel], ['Time', d.time],
     ['Delivery', d.deliveryText],
     ['Name', d.name + (d.partner ? ' & ' + d.partner : '')],
     ['Email', d.email], ['Phone', d.phone],
@@ -143,7 +156,7 @@ function bookingText(d: NonNullable<typeof data.value>): string {
     'Reference : ' + d.ref, '',
     'Coverage  : ' + d.service + ' (' + d.coverage + ')',
     'Date      : ' + d.dateLabel,
-    'Start     : ' + d.time,
+    'Time      : ' + d.time,
     'Delivery  : ' + d.deliveryText, '',
     'Name      : ' + d.name + (d.partner ? ' & ' + d.partner : ''),
     'Email     : ' + d.email,
@@ -169,7 +182,7 @@ const requestText = computed(() => (data.value ? bookingText(data.value) : ''))
 const confirmLine = computed(() => {
   const d = data.value
   if (!d) return ''
-  return d.service + ' on ' + d.dateLabel + (d.time && d.time !== 'Full day' ? ' at ' + d.time : '') +
+  return d.service + ' on ' + d.dateLabel + (d.start ? ', ' + d.start + '–' + d.end : '') +
     (d.total ? '. Deposit to hold the date: K' + fmtMoney(d.deposit) + '.' : '. We will come back with a quotation.')
 })
 const waHref = computed(() => {
@@ -234,15 +247,9 @@ async function copy() {
   setTimeout(() => { copyLabel.value = 'Copy request' }, 1800)
 }
 
-const noticeNote = computed(() => {
-  const svc = service.value
-  const key = svc?.times
-    ? 'A date with a copper corner still has start times open; crossed dates are fully booked.'
-    : 'A date with a copper corner has another booking that day but room for yours; crossed dates are fully booked.'
-  return svc ? `${svc.name} need at least ${svc.notice} days' notice. ${key}` : key
-})
-const addonIntro = computed(() => service.value?.addons.length
-  ? 'Everything here is optional. The total on the right updates as you go.'
+const noticeNote = 'A date with a copper corner already has something booked; crossed dates are fully booked.'
+const addonIntro = computed(() => stepAddons.value.length
+  ? 'Everything here is optional. The total on the right updates as you go.' + (extraHours.value ? ` Your ${extraHours.value} hour${extraHours.value === 1 ? '' : 's'} beyond the package are already in it.` : '')
   : 'No add-ons for this service yet — tell us in the notes what else you need and we will quote it.')
 </script>
 
@@ -270,7 +277,7 @@ const addonIntro = computed(() => service.value?.addons.length
           <p class="muted bstep__p">Session types can be adjusted to your liking —
             you can take parts of a service you like from a different package. Say so in the notes
             and we will build the quote around it.</p>
-          <BookingServicePicker v-model="serviceId" :services="SERVICES" />
+          <BookingServicePicker v-model="serviceId" :services="services" />
           <div class="bactions">
             <BaseButton variant="copper" type="button" :disabled="!canDate" arrow @click="go(2)">Choose a date</BaseButton>
           </div>
@@ -281,9 +288,10 @@ const addonIntro = computed(() => service.value?.addons.length
           <h2 id="s2-h" class="display h3 bstep__h">When is it?</h2>
           <p class="muted bstep__p">{{ noticeNote }}</p>
           <div class="mt-5">
-            <BookingAvailabilityCalendar v-model="date" :busy="busy" :hours="service?.hours ?? 1" :timed="service?.times ?? true" :slots="SLOTS" :notice="service?.notice ?? 3" :loading="api.mode.value === 'loading'" />
+            <BookingAvailabilityCalendar v-model="date" :busy="busy" :slots="SLOTS" :loading="api.mode.value === 'loading'" />
           </div>
-          <BookingSlotList v-if="service?.times" v-model="time" :slots="SLOTS" :taken="takenSlots" :waiting="api.mode.value === 'loading'" />
+          <p v-if="booked.length" class="mono booked">Already booked {{ fmtDate(date!) }}: {{ booked.map((b) => `${b.from}–${b.to}`).join(', ') }}</p>
+          <BookingSlotList v-model:start="start" v-model:hours="hours" :slots="SLOTS" :day-end="DAY_END" :taken="takenSlots" :waiting="api.mode.value === 'loading'" />
           <div class="bactions">
             <BaseButton type="button" @click="go(1)">← Back</BaseButton>
             <BaseButton variant="copper" type="button" :disabled="!canAddons" arrow @click="go(3)">Add-ons</BaseButton>
@@ -294,7 +302,7 @@ const addonIntro = computed(() => service.value?.addons.length
         <section v-else-if="step === 3" key="3" class="bstep" aria-labelledby="s3-h">
           <h2 id="s3-h" class="display h3 bstep__h">Anything extra?</h2>
           <p class="muted bstep__p">{{ addonIntro }}</p>
-          <BookingAddonStepper v-if="service" :addons="service.addons" :qty="quote.qty" :caps="addonCaps" @bump="quote.bump" />
+          <BookingAddonStepper v-if="service" :addons="stepAddons" :qty="quote.qty" @bump="quote.bump" />
           <div class="bactions">
             <BaseButton type="button" @click="go(2)">← Back</BaseButton>
             <BaseButton variant="copper" type="button" arrow @click="go(4)">Your details</BaseButton>
@@ -497,6 +505,7 @@ const addonIntro = computed(() => service.value?.addons.length
 .step-back-leave-to { opacity: 0; transform: translateX(18px); }
 .bstep__h { margin-bottom: var(--tm-sys-space-3); }
 .bstep__p { font-size: 15.5px; }
+.booked { margin: var(--tm-sys-space-4) 0 0; font-size: 10.5px; color: var(--tm-sys-color-on-surface-variant); }
 .bactions { display: flex; flex-wrap: wrap; gap: var(--tm-sys-space-3); margin-top: var(--tm-sys-space-6); }
 .form { display: grid; gap: var(--tm-sys-space-4); }
 .fs { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: var(--tm-sys-space-4); }

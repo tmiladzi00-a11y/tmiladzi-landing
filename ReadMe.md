@@ -66,8 +66,8 @@ One-time setup, about five minutes, free:
 
 1. In Google Calendar create a calendar just for bookings, e.g. "Tmiladzi
    bookings" (left sidebar, **+** next to Other calendars, Create new
-   calendar). A dedicated calendar matters: **everything on it blocks that
-   time on the site**, so personal reminders should live elsewhere.
+   calendar). A dedicated calendar keeps things simple, though personal
+   items can share it: only events shown as **Busy** block time (see below).
 2. Open that calendar's settings, scroll to **Integrate calendar**, and copy
    **Secret address in iCal format**. Treat it like a password.
 3. In Cloudflare: Workers & Pages, the project, Settings, Variables and
@@ -82,17 +82,31 @@ How bookings read on the site:
 
 | On the calendar | On the site |
 |---|---|
-| Timed event, e.g. Sat 09:00–10:00 | Start times that would overlap it are crossed out; the rest of the day stays bookable |
-| All-day event | That date is fully booked for every service |
-| Repeating event | Every occurrence blocks its time |
+| Timed event, e.g. Sat 09:00–12:00 | The hours it touches (09:00, 10:00, 11:00) are crossed out; the date gets a copper corner and the rest of the day stays bookable |
+| All-day event set to **Busy** | That date is fully booked |
+| Any event set to **Free** (birthdays, notes, reminders) | Ignored: the time stays open |
+| Repeating event | Every Busy occurrence blocks its time |
 | Cancelled or deleted event | Free again |
+| Task (Google Tasks, reminders) | Never reaches the site: calendar feeds export events only |
 
-A start time is offered when the service's hours fit before the next
-booking: a one-hour session needs one clear hour, a four-hour event needs
-four. A wedding date is offered when ten clear hours exist between 06:00 and
-22:00. To hold a whole day for any reason, add an all-day event. To leave
-travel time after a job, make the calendar event longer. Start times and
-the working day are in `app/content/services.ts` and
+In Google Calendar, Busy / Free is the **Show as** setting on an event.
+Timed events are Busy by default, **all-day events are Free by default**: to
+hold a whole day for a shoot, open the all-day event and set Show as to
+Busy.
+
+The calendar is the only rule, and every package sees the same thing. The
+bookable day is a row of one-hour blocks from 07:00 to 18:00. A block is
+crossed out when an event on the calendar overlaps it, and a date is fully
+booked when every block is. Past dates and hours that have already begun
+today cannot be picked. The selected date lists its booked times.
+
+The visitor taps a first hour and a last hour: any run of open hours, of any
+length from one hour, is a booking, and a run cannot cross a booked hour.
+Hours beyond what the package includes are added to the quote as its
+"Additional time" at the package's hourly rate; a shorter run keeps the
+package price. To hold a whole day, add an all-day event; to leave travel or
+set-up time, make the event longer. The hours are in
+`app/content/services.ts` (`SLOTS`, `DAY_END`), the rule in
 `app/utils/availability.ts`.
 
 Only start and end times leave the worker. Event titles, names and
@@ -111,6 +125,32 @@ Google Apps Script web app can take them instead: set
 reference and a copy-to-WhatsApp fallback. Rates live in
 `app/content/services.ts`; if an Apps Script is used it must mirror them,
 since it recomputes every total itself.
+
+## CMS (proof of concept, local only)
+
+Packages (Premium / Basic), their add-ons, the booking page heading, bookable
+hours and the details-form choices can be edited at `/admin`. Data lives in
+Cloudflare D1; `/booking` and `/celebrations` render from it per request via
+`/api/catalog`.
+
+```bash
+npm run cms:migrate  # create + seed the local D1 (.wrangler/state) from app/content/services.ts
+npm run dev          # then open http://localhost:3000/admin
+npm run cms:reset    # wipe local edits back to the seed
+```
+
+- **Sign-in** is Cloudflare Zero Trust Access on `/admin*` and `/api/admin*`;
+  the API also verifies the Access token (`server/utils/access.ts`). Locally
+  you are signed in as `dev@localhost`. Deployed without
+  `NUXT_ACCESS_TEAM_DOMAIN` + `NUXT_ACCESS_AUD`, every admin request is refused.
+- **No database bound** (today's production): the site uses the built-in
+  prices in `app/content/services.ts`, exactly as before.
+- **Local binding** is in `wrangler.dev.jsonc`, deliberately not
+  `wrangler.jsonc`, so the placeholder database id never reaches a deploy.
+- **To go live:** `wrangler d1 create tmiladzi-cms`, put the binding with
+  its real id in `wrangler.jsonc`, apply migrations with `--remote`, add a
+  migrations step to the deploy workflow, create the Access application and
+  set the two `NUXT_ACCESS_*` variables.
 
 ## Where things are
 

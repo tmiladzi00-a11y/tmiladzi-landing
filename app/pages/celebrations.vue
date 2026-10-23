@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PROJECTS } from '~/content/projects'
-import { SERVICES } from '~/content/services'
+const { data: catalog } = await useCatalog()
 useSeoMeta({ title: 'Weddings', description: 'Wedding coverage, small events and portrait sessions on published packages with a live booking calendar. Kitwe, Copperbelt and Zambia-wide.' })
 const weddings = PROJECTS.filter((p) => p.cat === 'weddings')
 </script>
@@ -32,7 +32,7 @@ const weddings = PROJECTS.filter((p) => p.cat === 'weddings')
         so you can build the coverage you want without a quotation ping-pong. These are the
         same numbers the booking calendar quotes from.
       </SectionHead>
-      <PackageTable :services="SERVICES" />
+      <PackageTable :services="catalog.services" />
       <div class="row mt-7">
         <BaseButton variant="copper" to="/booking" arrow>Build your booking</BaseButton>
         <BaseButton to="/contact">Ask a question first</BaseButton>

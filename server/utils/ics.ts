@@ -5,9 +5,10 @@
    Handles what real calendars emit: folded lines, UTC / TZID / floating
    times, all-day events, DURATION, repeating events (DAILY, WEEKLY, MONTHLY,
    YEARLY with INTERVAL, COUNT, UNTIL, BYDAY, BYMONTHDAY, BYSETPOS), EXDATE, and
-   RECURRENCE-ID overrides. Cancelled events are skipped. Everything else on
-   the calendar counts as busy, including events marked "free": the rule for
-   the studio is simply "if it is on the calendar, that time is taken". */
+   RECURRENCE-ID overrides. Cancelled events are skipped, and so are events
+   shown as "Free" (TRANSP:TRANSPARENT): birthdays, notes and reminders stay
+   on the calendar without closing the day. Everything shown as "Busy" blocks.
+   Tasks never arrive here: calendar feeds export events only. */
 
 export interface Busy { s: number; e: number }
 export interface IcsOptions {
@@ -26,7 +27,7 @@ interface Prop { name: string; params: Record<string, string>; value: string }
 /** A wall-clock reading: ms is Date.UTC() of its components, not an instant. */
 interface Wall { ms: number; isDate: boolean; utc: boolean; tz?: string }
 interface Rule { freq: string; interval: number; count?: number; until?: number; byday: { ord: number; day: number }[]; bymonthday: number[]; bysetpos: number[]; wkst: number }
-interface RawEvent { uid: string; start?: Wall; end?: Wall; duration?: number; rule?: Rule; exdates: Wall[]; recurrenceId?: Wall; cancelled: boolean }
+interface RawEvent { uid: string; start?: Wall; end?: Wall; duration?: number; rule?: Rule; exdates: Wall[]; recurrenceId?: Wall; cancelled: boolean; free: boolean }
 
 function unfold(text: string): string[] {
   return text.replace(/\r\n?/g, '\n').replace(/\n[ \t]/g, '').split('\n')
@@ -190,7 +191,7 @@ export function parseIcs(text: string, opts: IcsOptions): Busy[] {
     const p = parseLine(line)
     if (!p) continue
     if (p.name === 'BEGIN') {
-      if (p.value.toUpperCase() === 'VEVENT') { cur = { uid: '', exdates: [], cancelled: false }; nested = 0 }
+      if (p.value.toUpperCase() === 'VEVENT') { cur = { uid: '', exdates: [], cancelled: false, free: false }; nested = 0 }
       else if (cur) nested++ // VALARM and friends inside an event
       continue
     }
@@ -209,10 +210,12 @@ export function parseIcs(text: string, opts: IcsOptions): Busy[] {
       case 'EXDATE': for (const v of p.value.split(',')) { const w = parseWall(v, p.params); if (w) cur.exdates.push(w) } break
       case 'RECURRENCE-ID': cur.recurrenceId = parseWall(p.value, p.params) ?? undefined; break
       case 'STATUS': cur.cancelled = p.value.trim().toUpperCase() === 'CANCELLED'; break
+      case 'TRANSP': cur.free = p.value.trim().toUpperCase() === 'TRANSPARENT'; break
     }
   }
 
-  // an override (RECURRENCE-ID) replaces one instance of its series
+  // an override (RECURRENCE-ID) replaces one instance of its series, even a
+  // Free override of a Busy series: that one instance is then open
   const replaced = new Map<string, Set<number>>()
   for (const ev of events) {
     if (!ev.recurrenceId || !ev.uid) continue
@@ -225,7 +228,7 @@ export function parseIcs(text: string, opts: IcsOptions): Busy[] {
   const push = (s: number, len: number) => { const e = s + len; if (len > 0 && e > opts.from && s < opts.to) out.push({ s, e }) }
 
   for (const ev of events) {
-    if (ev.cancelled || !ev.start) continue
+    if (ev.cancelled || ev.free || !ev.start) continue
     const s0 = toInstant(ev.start.ms, ev.start, opts.offsetMin)
     let len = 0
     if (ev.end) len = toInstant(ev.end.ms, ev.end, opts.offsetMin) - s0

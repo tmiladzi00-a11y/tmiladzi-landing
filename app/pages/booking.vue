@@ -1,5 +1,7 @@
 <script setup lang="ts">
-useSeoMeta({ title: 'Book a date', description: 'Choose your coverage, pick a date that is open, add anything extra you want, and tell us about the day. You see the full price as you build it.' })
+const { data: catalog } = await useCatalog()
+const settings = computed(() => catalog.value.settings)
+useSeoMeta({ title: () => settings.value.title, description: () => settings.value.lede })
 
 /* Browsers parse <noscript> contents as raw text when scripting is on, so
    Vue cannot hydrate its children. v-html hands it over as a string and
@@ -12,17 +14,13 @@ const nojs = `<p class="note book__nojs">The booking calendar needs JavaScript. 
 <template>
   <div>
     <PageBand tight>
-      <Eyebrow copper>Weddings, events &amp; sessions</Eyebrow>
-      <h1 class="display h1 book__h1">Book a date</h1>
-      <p class="lede mt-5 book__lede">
-        Choose your coverage, pick a date that is open, add anything extra you want,
-        and tell us about the day. You see the full price as you build it — nothing is
-        hidden until a quote arrives.
-      </p>
+      <Eyebrow copper>{{ settings.eyebrow }}</Eyebrow>
+      <h1 class="display h1 book__h1">{{ settings.title }}</h1>
+      <p class="lede mt-5 book__lede">{{ settings.lede }}</p>
     </PageBand>
     <PageBand tight flush>
       <noscript v-html="nojs" />
-      <BookingWizard />
+      <BookingWizard :services="catalog.services" :settings="settings" />
     </PageBand>
   </div>
 </template>

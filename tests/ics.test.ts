@@ -51,9 +51,26 @@ describe('single events', () => {
     ), opts)
     expect(b).toEqual([])
   })
-  it('counts events marked free as busy: on the calendar means taken', () => {
-    const b = parseIcs(cal(ev('UID:a', 'DTSTART;VALUE=DATE:20261017', 'DTEND;VALUE=DATE:20261018', 'TRANSP:TRANSPARENT')), opts)
-    expect(b).toHaveLength(1)
+  it('skips events shown as Free; Busy and unmarked events block', () => {
+    const b = parseIcs(cal(
+      ev('UID:a', 'DTSTART;VALUE=DATE:20261017', 'DTEND;VALUE=DATE:20261018', 'TRANSP:TRANSPARENT'),
+      ev('UID:b', 'DTSTART:20261010T070000Z', 'DTEND:20261010T080000Z', 'TRANSP:OPAQUE'),
+      ev('UID:c', 'DTSTART:20261011T070000Z', 'DTEND:20261011T080000Z'),
+    ), opts)
+    expect(b).toEqual([
+      { s: utc('2026-10-10T07:00:00Z'), e: utc('2026-10-10T08:00:00Z') },
+      { s: utc('2026-10-11T07:00:00Z'), e: utc('2026-10-11T08:00:00Z') },
+    ])
+  })
+  it('a yearly Free birthday never blocks', () => {
+    expect(parseIcs(cal(ev('UID:a', 'DTSTART;VALUE=DATE:20250524', 'DTEND;VALUE=DATE:20250525', 'RRULE:FREQ=YEARLY', 'TRANSP:TRANSPARENT')), opts)).toEqual([])
+  })
+  it('one instance of a Busy series set to Free opens just that instance', () => {
+    const b = parseIcs(cal(
+      ev('UID:s', 'DTSTART:20261005T070000Z', 'DTEND:20261005T080000Z', 'RRULE:FREQ=DAILY;COUNT=3'),
+      ev('UID:s', 'RECURRENCE-ID:20261006T070000Z', 'DTSTART:20261006T070000Z', 'DTEND:20261006T080000Z', 'TRANSP:TRANSPARENT'),
+    ), opts)
+    expect(b.map((x) => new Date(x.s).toISOString().slice(0, 10))).toEqual(['2026-10-05', '2026-10-07'])
   })
   it('unfolds long lines and ignores alarms inside an event', () => {
     const text = cal(['BEGIN:VEVENT', 'UID:a', 'DTSTART:20261010T0700', ' 00Z', 'DTEND:20261010T080000Z', 'BEGIN:VALARM', 'TRIGGER:-PT15M', 'DTSTART:19990101T000000Z', 'END:VALARM', 'END:VEVENT'].join('\r\n'))

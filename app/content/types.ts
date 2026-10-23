@@ -76,8 +76,11 @@ export interface Addon {
 
 export type DeliveryUnit = 'weeks' | 'hours'
 
+export type Tier = 'basic' | 'premium'
+
 export interface Service {
   id: string
+  tier: Tier
   name: string
   tag: string
   price: number | null
@@ -87,15 +90,39 @@ export interface Service {
   cov: string
   delivery: number
   deliveryUnit: DeliveryUnit
-  /** Days' notice required before the earliest bookable date. */
-  notice: number
-  /** Whether a start time is chosen; false means a full-day booking. */
-  times: boolean
   live: boolean
   blurb: string
   includes: string[]
   notes: string[]
   addons: Addon[]
+}
+
+/** Booking page copy, bookable hours and form choices, edited in the CMS. */
+export interface BookingSettings {
+  eyebrow: string
+  title: string
+  lede: string
+  /** First bookable hour, 'HH:00'. */
+  dayStart: string
+  /** When the last hour block ends, 'HH:00'. */
+  dayEnd: string
+  regions: string[]
+  heard: string[]
+}
+
+/** What the booking page renders from. 'static' is the built-in copy in content/. */
+export interface Catalog {
+  source: 'cms' | 'static'
+  services: Service[]
+  settings: BookingSettings
+}
+
+/** A package as the CMS holds it: the service plus its editorial state. */
+export interface PackageRecord extends Service {
+  published: boolean
+  sort: number
+  updatedAt?: string
+  updatedBy?: string
 }
 
 export interface ClientEntry {

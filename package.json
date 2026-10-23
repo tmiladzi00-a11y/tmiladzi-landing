@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
+    "cms:migrate": "wrangler d1 migrations apply DB --local -c wrangler.dev.jsonc",
+    "cms:reset": "rm -rf .wrangler/state/v3/d1 && wrangler d1 migrations apply DB --local -c wrangler.dev.jsonc",
     "og": "node scripts/og-image.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -13,6 +15,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "jose": "^6.2.13",
     "nuxt": "^4.5.2",
     "vue": "^3.5.42",
     "vue-router": "^5.3.0"

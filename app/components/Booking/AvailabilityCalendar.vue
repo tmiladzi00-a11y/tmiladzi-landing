@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { MONTHS, DOW, iso, fmtDate, startOfMonth, addMonths, addDays } from '~/utils/dates'
+import { MONTHS, DOW, iso, fmtDate, startOfMonth, addMonths } from '~/utils/dates'
 import { dayAvailability, type Busy } from '~/utils/availability'
 
-/* A date has three states, worked out from the studio calendar's busy
-   intervals for the service being booked: open, partly taken (some start
-   times gone, or part of the day for a full-day service), and full. Only a
-   full date is unselectable: one booking does not close a day. */
+/* A date has three states, read straight off the studio calendar and the
+   same for every package: open, partly taken (something is booked that day)
+   and full (every hour is taken). Only a full date, or one already
+   past, is unselectable. */
 const props = defineProps<{
   modelValue: string | null
   busy: Busy[]
-  /** The service being booked: its hours decide what fits. */
-  hours: number
-  timed: boolean
   slots: readonly string[]
-  /** Days' notice: dates before today + notice are not offered. */
-  notice: number
   /** Months ahead the cursor may travel. */
   horizon?: number
   /** The studio calendar has not answered yet: show the month as a skeleton. */
@@ -26,27 +21,25 @@ const today = new Date(); today.setHours(0, 0, 0, 0)
 const cursor = ref(startOfMonth(today))
 const dir = ref(1)
 const horizon = computed(() => props.horizon ?? 13)
-const minDate = computed(() => addDays(today, props.notice))
 
 const cells = computed(() => {
   const c = cursor.value
   const first = new Date(c.getFullYear(), c.getMonth(), 1)
   const lead = (first.getDay() + 6) % 7 // Monday-first
   const days = new Date(c.getFullYear(), c.getMonth() + 1, 0).getDate()
-  const out: { key: string; day?: number; iso?: string; blocked?: boolean; partial?: boolean; tooSoon?: boolean; label?: string }[] = []
-  const svc = { hours: props.hours, times: props.timed }
+  const out: { key: string; day?: number; iso?: string; blocked?: boolean; partial?: boolean; past?: boolean; label?: string }[] = []
   for (let i = 0; i < lead; i++) out.push({ key: 'e' + i })
   for (let i = 1; i <= days; i++) {
     const d = new Date(c.getFullYear(), c.getMonth(), i)
     const s = iso(d)
-    const tooSoon = d < minDate.value
-    const a = tooSoon ? null : dayAvailability(props.busy, s, svc, props.slots)
+    const past = d < today
+    const a = past ? null : dayAvailability(props.busy, s, props.slots)
     const blocked = a?.state === 'full'
     const partial = a?.state === 'partial'
-    const status = tooSoon ? 'Too soon' : blocked ? 'Fully booked'
-      : partial ? (props.timed ? `Available, ${a!.free.length} of ${props.slots.length} start times open` : 'Available, part of the day is already booked')
+    const status = past ? 'Past' : blocked ? 'Fully booked'
+      : partial ? `Available, ${a!.free.length} of ${props.slots.length} hours open`
       : 'Available'
-    out.push({ key: s, day: i, iso: s, blocked, partial, tooSoon, label: `${fmtDate(s)} — ${status}` })
+    out.push({ key: s, day: i, iso: s, blocked, partial, past, label: `${fmtDate(s)} — ${status}` })
   }
   return out
 })
@@ -79,7 +72,7 @@ const monthKey = computed(() => cursor.value.getFullYear() * 12 + cursor.value.g
           class="calday"
           :class="{ blocked: !loading && c.blocked, partial: !loading && c.partial, sel: modelValue === c.iso }"
           :style="{ '--col': i % 7 }"
-          :disabled="loading || c.blocked || c.tooSoon"
+          :disabled="loading || c.blocked || c.past"
           :aria-pressed="modelValue === c.iso"
           :aria-label="loading ? `${c.day}, checking availability` : c.label"
           @click="emit('update:modelValue', c.iso!)"

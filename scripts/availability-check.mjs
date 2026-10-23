@@ -7,10 +7,9 @@ const S = process.argv[2] || '.'
 const b = await chromium.launch({ channel: 'chrome' })
 const errs = []
 const open = async (w) => { const p = await b.newPage({ viewport: { width: w, height: 1000 } }); p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()) }); await p.goto((process.env.BASE || 'http://localhost:3210') + '/booking', { waitUntil: 'networkidle' }); return p }
-const days = (p) => p.evaluate(() => [...document.querySelectorAll('button.calday')].map((e) => e.textContent.trim() + (e.classList.contains('blocked') ? ':full' : e.classList.contains('partial') ? ':part' : e.disabled ? ':soon' : ':open')).join(' '))
+const days = (p) => p.evaluate(() => [...document.querySelectorAll('button.calday')].map((e) => e.textContent.trim() + (e.classList.contains('blocked') ? ':full' : e.classList.contains('partial') ? ':part' : e.disabled ? ':past' : ':open')).join(' '))
 const month = async (p) => (await p.locator('.calmonth').textContent()).trim()
-// the first date that can be picked, whatever today is; a fixed day would
-// fall inside the notice period as the month goes on
+// the first date that can be picked, whatever today is
 const firstOpen = (p) => p.locator('button.calday:not(:disabled)').first()
 
 // --- a one-hour session
@@ -21,17 +20,17 @@ await p.getByRole('button', { name: 'Choose a date' }).click(); await p.waitForT
 console.log(`SESSION ${await month(p)}:`, await days(p))
 const picked = await firstOpen(p).textContent()
 await firstOpen(p).click(); await p.waitForTimeout(300)
-console.log(`  ${picked.trim()} ${await month(p)} slots:`, await p.evaluate(() => [...document.querySelectorAll('.slot')].map((e) => e.textContent.trim().slice(0, 5) + (e.classList.contains('slot--taken') ? ':taken' : ':free')).join(' ')))
-await p.locator('.slot:not(.slot--taken) input').first().check({ force: true }); await p.waitForTimeout(200)
+console.log(`  ${picked.trim()} ${await month(p)} hours:`, await p.evaluate(() => [...document.querySelectorAll('.slot')].map((e) => e.textContent.trim().slice(0, 5) + (e.classList.contains('slot--taken') ? ':taken' : ':free')).join(' ')))
+// first open hour, then the third open hour after it: a run of up to three hours
+const hrs = p.locator('.slot:not(.slot--taken)')
+await hrs.first().click(); await hrs.nth(2).click(); await p.waitForTimeout(200)
+console.log('  picked:', (await p.locator('.slots__pick').textContent()).trim(), '| total', (await p.locator('.sumtotal__b').textContent()).trim())
 await p.screenshot({ path: `${S}/session-date.png` })
 await p.getByRole('button', { name: 'Add-ons' }).click(); await p.waitForTimeout(600)
-console.log('  extra-time note:', (await p.locator('.addon__cap').first().textContent().catch(() => 'none')).trim())
-await p.getByRole('button', { name: 'More Additional time' }).click(); await p.waitForTimeout(250)
-console.log('  after one extra hour, + disabled:', await p.getByRole('button', { name: 'More Additional time' }).isDisabled(), '| total', (await p.locator('.sumtotal__b').textContent()).trim())
 await p.screenshot({ path: `${S}/session-addons.png` })
 await p.close()
 
-// --- a four-hour event: the same bookings remove more start times
+// --- every package must show the same month
 p = await open(1440)
 await p.getByLabel('Small Events', { exact: false }).first().check({ force: true })
 await p.getByRole('button', { name: 'Choose a date' }).click(); await p.waitForTimeout(500)

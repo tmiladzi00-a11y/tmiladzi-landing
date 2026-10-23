@@ -15,7 +15,8 @@ const addonRows = computed(() => {
   const ids: string[] = []
   for (const s of props.services) for (const a of s.addons) if (!ids.includes(a.id)) ids.push(a.id)
   return ids.map((id) => ({
-    id, label: ADDON_LABELS[id] || id,
+    // add-ons created in the CMS have no shared label: use the first package's name for it
+    id, label: ADDON_LABELS[id] || props.services.flatMap((s) => s.addons).find((a) => a.id === id)!.name,
     cells: props.services.map((s) => {
       const a = s.addons.find((x) => x.id === id)
       if (!a) return { text: '—', empty: true }

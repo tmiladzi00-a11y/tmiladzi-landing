@@ -123,12 +123,12 @@ describe('delivery clock', () => {
 })
 
 describe('quantity rules', () => {
-  const time = wedding.addons.find((a) => a.id === 'time')!
+  const second = wedding.addons.find((a) => a.id === 'second')!
   const prewed = wedding.addons.find((a) => a.id === 'prewed')!
   it('steppers clamp to [0, max]', () => {
-    expect(nextQuantity(time, 0, -1)).toBe(0)
-    expect(nextQuantity(time, 6, 1)).toBe(6)
-    expect(nextQuantity(time, 2, 1)).toBe(3)
+    expect(nextQuantity(second, 0, -1)).toBe(0)
+    expect(nextQuantity(second, 3, 1)).toBe(3)
+    expect(nextQuantity(second, 1, 1)).toBe(2)
   })
   it('toggles flip regardless of delta', () => {
     expect(nextQuantity(prewed, 0, 0)).toBe(1)

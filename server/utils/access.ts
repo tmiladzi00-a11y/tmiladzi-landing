@@ -8,11 +8,18 @@ import { createRemoteJWKSet, jwtVerify } from 'jose'
    way round Access (a pages.dev preview URL, a misconfigured policy) still
    carries no valid token and is refused.
 
-   NUXT_ACCESS_TEAM_DOMAIN  e.g. tmiladzi.cloudflareaccess.com
-   NUXT_ACCESS_AUD          the Access application's "Application Audience (AUD) Tag"
+   The studio's Access application is built in below. Neither value is a
+   secret (Cloudflare puts both in every sign-in token), and shipping them
+   with the code means they cannot go missing from a deployment: dashboard
+   variables were being dropped because the build deploys its own wrangler
+   config. NUXT_ACCESS_TEAM_DOMAIN and NUXT_ACCESS_AUD still override them,
+   e.g. for a different Access team.
 
-   Without both: local dev signs everyone in as dev@localhost; a deployment
-   refuses every admin request (fails closed). */
+   Local dev ignores the built-in values and signs everyone in as
+   dev@localhost. A deployment with no values refuses every admin request
+   (fails closed). */
+const ACCESS_TEAM_DOMAIN = 'crimson-surf-accf.cloudflareaccess.com'
+const ACCESS_AUD = '788eaeb7adb305289c2cda78f0c042861d655e8a132c4ca073e063dcffb23864'
 
 export interface AdminIdentity { email: string }
 
@@ -25,8 +32,9 @@ const keySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 export async function requireAdmin(event: H3Event): Promise<AdminIdentity> {
   const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
   const config = useRuntimeConfig(event)
-  const team = String(config.accessTeamDomain || cfEnv.NUXT_ACCESS_TEAM_DOMAIN || '').replace(/^https?:\/\//, '').replace(/\/+$/, '')
-  const aud = String(config.accessAud || cfEnv.NUXT_ACCESS_AUD || '')
+  const team = String(config.accessTeamDomain || cfEnv.NUXT_ACCESS_TEAM_DOMAIN || (import.meta.dev ? '' : ACCESS_TEAM_DOMAIN))
+    .replace(/^https?:\/\//, '').replace(/\/+$/, '')
+  const aud = String(config.accessAud || cfEnv.NUXT_ACCESS_AUD || (import.meta.dev ? '' : ACCESS_AUD))
 
   if (!team || !aud) {
     if (import.meta.dev) return { email: 'dev@localhost' }

@@ -140,17 +140,18 @@ npm run cms:reset    # wipe local edits back to the seed
 ```
 
 - **Sign-in** is Cloudflare Zero Trust Access on `/admin*` and `/api/admin*`;
-  the API also verifies the Access token (`server/utils/access.ts`). Locally
-  you are signed in as `dev@localhost`. Deployed without
-  `NUXT_ACCESS_TEAM_DOMAIN` + `NUXT_ACCESS_AUD`, every admin request is refused.
+  the API also verifies the Access token (`server/utils/access.ts`, which
+  has the studio's team domain and AUD built in; neither is secret, and
+  `NUXT_ACCESS_TEAM_DOMAIN` / `NUXT_ACCESS_AUD` override them). Locally you
+  are signed in as `dev@localhost`.
 - **No database bound** (today's production): the site uses the built-in
   prices in `app/content/services.ts`, exactly as before.
 - **Local binding** is in `wrangler.dev.jsonc`, deliberately not
   `wrangler.jsonc`, so the placeholder database id never reaches a deploy.
 - **To go live:** `wrangler d1 create tmiladzi-cms`, put the binding with
   its real id in `wrangler.jsonc`, apply migrations with `--remote`, add a
-  migrations step to the deploy workflow, create the Access application and
-  set the two `NUXT_ACCESS_*` variables.
+  migrations step to the deploy workflow, and make sure the Access
+  application covers both `tmiladzi.com/admin` and `tmiladzi.com/api/admin`.
 
 ## Where things are
 

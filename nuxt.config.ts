@@ -25,9 +25,9 @@ export default defineNuxtConfig({
     // (NUXT_CALENDAR_ICS_URL). The booking page reads live availability from
     // it; blank means preview mode on sample data.
     calendarIcsUrl: '',
-    // Cloudflare Zero Trust Access in front of /admin (see server/utils/access.ts):
-    // NUXT_ACCESS_TEAM_DOMAIN (xxx.cloudflareaccess.com) and NUXT_ACCESS_AUD.
-    // Blank: admin open in local dev, refused when deployed.
+    // Cloudflare Zero Trust Access in front of /admin. The studio's team and
+    // AUD are built into server/utils/access.ts; NUXT_ACCESS_TEAM_DOMAIN and
+    // NUXT_ACCESS_AUD override them. Local dev signs in as dev@localhost.
     accessTeamDomain: '',
     accessAud: '',
     public: {

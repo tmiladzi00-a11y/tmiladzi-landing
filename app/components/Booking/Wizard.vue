@@ -431,7 +431,7 @@ const addonIntro = computed(() => stepAddons.value.length
             <div class="bactions">
               <BaseButton variant="copper" :href="waHref" external arrow>Message on WhatsApp</BaseButton>
               <BaseButton type="button" @click="copy">{{ copyLabel }}</BaseButton>
-              <BaseButton to="/celebrations">Back to packages</BaseButton>
+              <BaseButton to="/">Back to the home page</BaseButton>
             </div>
             <pre ref="bookingTextEl" class="mono request">{{ requestText }}</pre>
           </div>

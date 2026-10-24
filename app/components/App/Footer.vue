@@ -2,14 +2,11 @@
 import { SITE } from '~/content/site'
 
 const studio = [
-  { to: '/work', label: 'Work' },
-  { to: '/films', label: 'Films' },
   { to: '/capabilities', label: 'Capabilities' },
   { to: '/studio', label: 'About' },
 ]
 const book = [
   { to: '/brief', label: 'Project brief' },
-  { to: '/celebrations', label: 'Weddings' },
   { to: '/booking', label: 'Booking calendar' },
   { to: '/contact', label: 'Contact' },
 ]

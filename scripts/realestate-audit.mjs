@@ -1,6 +1,6 @@
 import { chromium } from 'playwright-core'
 const S = process.argv[2]
-const ROUTES = ['/', '/work', '/work/zambeef-mpongwe', '/films', '/capabilities', '/studio', '/celebrations', '/booking', '/contact']
+const ROUTES = ['/', '/capabilities', '/studio', '/booking', '/contact']
 const VIEWPORTS = [[390, 844, 'phone'], [1440, 900, 'laptop'], [1920, 1080, 'desktop']]
 const b = await chromium.launch({ channel: 'chrome' })
 const rows = []

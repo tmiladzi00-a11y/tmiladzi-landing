@@ -42,7 +42,7 @@ useSeoMeta({ title: 'Studio', description: 'Tmiladzi Media was built in Kitwe by
           </div>
         </div>
         <div>
-          <PlateFrame ratio="4-5" pa="#215F48" pb="#6B3E1E" tag="Portrait slot" :title="SITE.founder" sub="Founder · Director of photography" sizes="(min-width: 900px) 40vw, 100vw" />
+          <PlateFrame ratio="4-5" pa="#215F48" pb="#6B3E1E" :src="SITE.founderPhoto || undefined" :alt="`${SITE.founder}, founder of Tmiladzi Media`" :tag="SITE.founderPhoto ? 'Founder' : 'Portrait slot'" :title="SITE.founder" sub="Founder · Director of photography" sizes="sm:100vw md:100vw lg:40vw xl:40vw xxl:40vw" />
           <dl class="studio__facts">
             <ContactRow term="Based">Kitwe, Copperbelt</ContactRow>
             <ContactRow term="Coverage">Zambia-wide · regional on request</ContactRow>

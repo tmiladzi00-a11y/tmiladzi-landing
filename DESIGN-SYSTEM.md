@@ -124,15 +124,19 @@ motion only in response to what the user did. Nothing reveals on scroll,
 nothing loops. `prefers-reduced-motion` collapses everything to instant in
 `base.css`, and Nuxt skips View Transitions under it.
 
+Deliberate exception, at the studio's request (October 2026): the home hero
+plays a muted, looping minute of drone footage behind the headline
+(`HomeHero`, files in `public/hero/`). It carries a visible Pause/Play
+control, pauses when scrolled out of view, and does not start under reduced
+motion, Save-Data or a 2G/3G connection; the poster frame shows instead.
+
 The full inventory, each with the action it answers:
 
 | Motion | Answers | Where |
 |---|---|---|
 | Hero entrance, four steps, once | First load | `HomeHero` |
 | Page crossfade + 6px rise | Navigation | View Transitions in `base.css`; Vue `page-*` fallback via `NuxtPage :transition` |
-| Plate morphs grid thumbnail to case-study hero | Opening or leaving a project | `PlateFrame vtName="plate-<id>"` on `WorkCard` and `/work/[slug]` |
 | Registration marks and slug brighten, 3px lift | Hovering a frame | `PlateFrame lift` |
-| Survivors slide, arrivals settle, departures leave the flow | Applying a filter | `WorkGrid` TransitionGroup (FLIP) |
 | Step slides from the right going forward, from the left going back | Advancing or returning in the wizard | `BookingWizard` |
 | Month grid slides the way paged | Prev/next month | `BookingAvailabilityCalendar` |
 | Digit rolls up or down | Stepper change | `BookingAddonStepper` |
@@ -267,11 +271,6 @@ inside a link). Without `src`: radial duotone, feTurbulence grain at
 marks. With `src`: the photograph, faint grain, a bottom scrim so the
 metadata stays legible. It is a `<figure>` with a `<figcaption>`.
 
-**WorkCard / WorkGrid / FilterBar** — card is a NuxtLink around a `thumb`
-plate and a caption. Grid is a `role="list"` at 1/2/3 columns (680, 1040).
-FilterBar is a `role="group"` of `aria-pressed` buttons; the work page keeps
-the active filter in the URL query and announces the count to a live region.
-
 **CapabilityCard** — `SurfaceCard` with key, h4 and body, rendered as `<li>`.
 
 **SurfaceCard** — the raised surface (elevation 2). Props `k` (mono key),
@@ -327,26 +326,13 @@ colour.
 renders a plain-text brief in a `<pre>` with copy-to-clipboard (and a
 selection fallback) and an edit path back.
 
-**Lightbox** — a native `<dialog>` for a project's frames: focus trapped by
-the element, Escape closes, arrow keys and swipe move, a counter reads
-"3 of 6", and the frame is sized to the viewport by its ratio. Body scroll is
-locked while open. Rendered client-only.
-
-**FrameGallery** — the frames from a shoot at their own ratios, packed in
-CSS columns (1/2/3 at 600 and 1000), each a button that opens the lightbox
-at its index. Frame tags name what was shot.
-
-**VideoEmbed** — a poster plate that becomes a YouTube (no-cookie) or Vimeo
-player on click; nothing third-party loads before that. Accepts a full URL
-or a bare ID. Without an `embed` it renders the plate alone.
-
 **FrameStrip** — the home page's "Recent frames" as a horizontal scroll-snap
 strip of 520px plates with slug lines, paging buttons for mouse users,
-native scroll for everyone else.
+native scroll for everyone else. Photographs only: nothing in it is a link.
 
-**PackageTable** — the three private-client packages side by side plus an
-add-on price matrix, both derived from `SERVICES`, so the marketing page and
-the booking engine cannot disagree.
+The Work, Films and Weddings pages (with the case studies, filter, gallery,
+lightbox, video embed and package table) were retired in October 2026. The
+components are in git history; the old URLs redirect (see `nuxt.config.ts`).
 
 **Bleed** — `.bleed` in `base.css` lets an image grid or hero plate run to
 `--tm-sys-layout-bleed` (1760px) while the text container stays at 1440px
@@ -414,7 +400,7 @@ every total from its own copy.
 
 ## 10. Content model
 
-`app/content/*.ts` holds projects, films, capabilities, process, clients,
+`app/content/*.ts` holds projects (the recent-frames strip), capabilities, process, clients,
 services, site details and terms versions, all typed in `types.ts`. A
 project with `cleared: false` publishes its `anonClient` descriptor instead
 of the client name everywhere, through `utils/clientName.ts`. That is a

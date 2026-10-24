@@ -17,10 +17,10 @@ function home() { clearError({ redirect: '/' }) }
       </p>
       <div class="row">
         <BaseButton variant="primary" type="button" arrow @click="home">Back to the start</BaseButton>
-        <BaseButton to="/work">See the work</BaseButton>
+        <BaseButton to="/capabilities">Capabilities</BaseButton>
         <BaseButton to="/contact">Contact</BaseButton>
       </div>
-      <PlateFrame class="mt-7 err__plate" ratio="21-9" pa="#3A2A1E" pb="#1F6B4E" tag="Missing frame" :title="String(error.statusCode)" :sub="notFound ? 'No frame at this address' : 'Render failed'" sizes="(min-width: 1440px) 1344px, 100vw" />
+      <PlateFrame class="mt-7 err__plate" ratio="21-9" pa="#3A2A1E" pb="#1F6B4E" tag="Missing frame" :title="String(error.statusCode)" :sub="notFound ? 'No frame at this address' : 'Render failed'" sizes="sm:100vw lg:100vw xxl:1344px" />
     </PageBand>
   </NuxtLayout>
 </template>

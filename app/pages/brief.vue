@@ -36,7 +36,7 @@ useSeoMeta({ title: 'Project brief', description: 'Six questions. Answer them he
           </SurfaceCard>
           <SurfaceCard k="Not a corporate project?" class="mt-5">
             <p class="mt-0">Weddings, portraits and family sessions book on a live calendar.</p>
-            <BaseButton variant="copper" size="sm" to="/celebrations" arrow class="mt-4">Go to packages</BaseButton>
+            <BaseButton variant="copper" size="sm" to="/booking" arrow class="mt-4">Go to packages</BaseButton>
           </SurfaceCard>
         </aside>
       </div>

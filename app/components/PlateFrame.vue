@@ -19,11 +19,13 @@ const props = withDefaults(defineProps<{
   thumb?: boolean
   /** Lift on hover: for plates inside a link. */
   lift?: boolean
+  /** Nuxt Image syntax, not the HTML attribute: 'sm:100vw md:50vw lg:400px'. Give
+      every size a breakpoint: a bare '100vw' is computed against a 1px screen. */
   sizes?: string
   loading?: 'lazy' | 'eager'
   /** Shared-element name so the plate morphs between routes. */
   vtName?: string
-}>(), { ratio: '3-2', pa: '#1E5F47', pb: '#3A2417', loading: 'lazy', sizes: '(min-width: 1040px) 400px, (min-width: 680px) 50vw, 100vw' })
+}>(), { ratio: '3-2', pa: '#1E5F47', pb: '#3A2417', loading: 'lazy', sizes: 'sm:100vw md:50vw lg:400px' })
 
 const style = computed(() => ({ '--pa': props.pa, '--pb': props.pb, viewTransitionName: props.vtName }))
 </script>

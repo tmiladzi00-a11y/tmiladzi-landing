@@ -62,7 +62,12 @@ export default defineNuxtConfig({
       ],
     },
   },
-  image: { quality: 82, format: ['webp'] },
+  // ipxStatic: every size a page asks for is written as a WebP file while the
+  // page is prerendered. The Cloudflare worker cannot resize images at request
+  // time, and without this the full-size originals were served as they are.
+  image: { provider: 'ipxStatic', quality: 82, format: ['webp'] },
+  // ipxStatic has no live /_ipx endpoint, so `nuxt dev` resizes on request instead.
+  $development: { image: { provider: 'ipx' } },
   // CSS stays split per chunk. With everything bundled into one file Nuxt
   // drops the stylesheet link (it believes the inlined styles cover it), and
   // pages reached by client-side navigation then arrive unstyled until a
@@ -73,12 +78,17 @@ export default defineNuxtConfig({
   // and served as files; the small worker that ships alongside handles
   // /api/* (form delivery) and anything not prerendered. Nitro writes the
   // wrangler.json and enables Node compatibility itself.
-  // The booking and packages pages read prices from the CMS (/api/catalog), so
-  // they render per request instead of at build time. The admin is a
-  // client-side app behind Cloudflare Access and is never indexed.
+  // The booking page reads prices from the CMS (/api/catalog), so it renders
+  // per request instead of at build time. The admin is a client-side app
+  // behind Cloudflare Access and is never indexed. The Work, Films and
+  // Weddings pages were retired in October 2026: their old addresses
+  // redirect permanently so bookmarks and search results still land.
   routeRules: {
     '/booking': { prerender: false },
-    '/celebrations': { prerender: false },
+    '/work': { redirect: { to: '/capabilities', statusCode: 301 } },
+    '/work/**': { redirect: { to: '/capabilities', statusCode: 301 } },
+    '/films': { redirect: { to: '/capabilities', statusCode: 301 } },
+    '/celebrations': { redirect: { to: '/booking', statusCode: 301 } },
     '/admin/**': { ssr: false, prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
   },
   nitro: {
@@ -90,13 +100,17 @@ export default defineNuxtConfig({
     cloudflare: {
       deployConfig: true,
       nodeCompat: true,
+      // Static files never wake the worker. Folders are excluded as wildcards:
+      // listed file by file, Cloudflare's 100-rule cap was cutting the
+      // generated /_ipx images off the list.
+      pages: { routes: { exclude: ['/_ipx/*', '/hero/*', '/frames/*', '/studio/*', '/logos/*', '/fonts/*'] } },
       dev: { configPath: 'wrangler.dev.jsonc' },
       wrangler: d1DatabaseId
         ? { d1_databases: [{ binding: 'DB', database_name: 'tmiladzi-cms', database_id: d1DatabaseId }] }
         : {},
     },
-    // Flat files (work.html, not work/index.html): Cloudflare Pages then serves
-    // /work as-is instead of redirecting to /work/, which kept the client
+    // Flat files (studio.html, not studio/index.html): Cloudflare Pages then serves
+    // /studio as-is instead of redirecting to /studio/, which kept the client
     // router's path from matching the server's and broke same-page navigation.
     prerender: { crawlLinks: true, routes: ['/', '/sitemap.xml'], ignore: ['/api'], autoSubfolderIndex: false },
   },

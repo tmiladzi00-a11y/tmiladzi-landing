@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PROJECTS } from '~/content/projects'
+import { RECENT_FRAMES } from '~/content/frames'
 import { CAPS } from '~/content/capabilities'
 import { PROCESS } from '~/content/process'
 import { CLIENTS } from '~/content/clients'
@@ -14,7 +15,11 @@ useSeoMeta({
 })
 
 const stripEl = ref<{ page: (dir: -1 | 1) => void } | null>(null)
-const strip = [...PROJECTS.filter((p) => p.featured), ...PROJECTS.filter((p) => !p.featured)].slice(0, 6)
+/* photographs from recent jobs, each captioned from the job it was taken on */
+const strip = RECENT_FRAMES.flatMap((f) => {
+  const project = PROJECTS.find((p) => p.id === f.project)
+  return project ? [{ ...f, project }] : []
+})
 const stats: [string, string][] = [
   ['8', 'Years in production'],
   ['3&nbsp;+&nbsp;8', 'Core team + crew at scale'],
@@ -74,13 +79,10 @@ const stats: [string, string][] = [
     <PageBand dark labelledby="work-h">
       <SectionHead id="work-h" eyebrow="Selected work" title="Recent frames" wide>
         <template #aside>
-          <div class="work__actions">
-            <StripNav label="Scroll recent frames" @page="stripEl?.page($event)" />
-            <BaseButton to="/work" size="sm" arrow>All projects</BaseButton>
-          </div>
+          <StripNav label="Scroll recent frames" @page="stripEl?.page($event)" />
         </template>
       </SectionHead>
-      <FrameStrip ref="stripEl" :projects="strip" />
+      <FrameStrip ref="stripEl" :frames="strip" />
     </PageBand>
 
     <PageBand labelledby="make-h">
@@ -135,7 +137,7 @@ const stats: [string, string][] = [
           <p class="muted">Sessions and wedding coverage run on published packages with a
             live booking calendar. Pick a date, see exactly what is included, and hold it.</p>
           <TickList tone="cop" :items="['Full-day wedding coverage with second shooter', 'Family, legacy and studio-at-your-home portraits', 'Private online gallery, unlimited edited images', 'Packages can be mixed — take the parts you want']" />
-          <template #action><BaseButton variant="copper" to="/celebrations" arrow>See packages &amp; dates</BaseButton></template>
+          <template #action><BaseButton variant="copper" to="/booking" arrow>See packages &amp; dates</BaseButton></template>
         </LaneCta>
       </div>
     </PageBand>
@@ -153,7 +155,6 @@ const stats: [string, string][] = [
 </template>
 
 <style scoped>
-.work__actions { display: flex; align-items: center; gap: var(--tm-sys-space-3); }
 .diff__cards { gap: var(--tm-sys-space-4); }
 .caplist { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--tm-sys-color-outline-variant); }
 .caplist li { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--tm-sys-space-4); padding: 14px 0; border-bottom: 1px solid var(--tm-sys-color-outline-variant); align-items: baseline; }

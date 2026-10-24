@@ -202,24 +202,3 @@ export const PROJECTS: Project[] = [
     stats: [['Setup', 'Portable studio'], ['Session', '1–4 hours'], ['Images', 'Unlimited edited']],
   },
 ]
-
-export const WORK_CATEGORIES: [ProjectFilter, string][] = [
-  ['all', 'All work'],
-  ['mining', 'Mining & industry'],
-  ['industry', 'Corporate'],
-  ['ngo', 'NGO & development'],
-  ['agri', 'Agribusiness'],
-  ['weddings', 'Weddings & portraits'],
-]
-export type ProjectFilter = 'all' | Project['cat']
-
-export function findProject(id: string): Project | undefined {
-  return PROJECTS.find((p) => p.id === id)
-}
-
-/** Previous and next project in roster order, wrapping at the ends. */
-export function neighbours(id: string): { prev: Project; next: Project } {
-  const i = Math.max(0, PROJECTS.findIndex((p) => p.id === id))
-  const n = PROJECTS.length
-  return { prev: PROJECTS[(i - 1 + n) % n]!, next: PROJECTS[(i + 1) % n]! }
-}

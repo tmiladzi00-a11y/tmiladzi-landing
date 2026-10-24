@@ -186,7 +186,7 @@ function edit() {
       <details class="out__details"><summary class="mono">Your brief as sent</summary><pre ref="pre" class="out__pre">{{ text }}</pre></details>
       <div class="row mt-4">
         <BaseButton size="sm" type="button" @click="copy">{{ copyLabel }}</BaseButton>
-        <BaseButton size="sm" to="/work">See the work while you wait</BaseButton>
+        <BaseButton size="sm" to="/capabilities">See what we make while you wait</BaseButton>
       </div>
     </div>
 

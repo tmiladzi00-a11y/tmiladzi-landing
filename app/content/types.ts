@@ -41,15 +41,13 @@ export interface Frame {
   alt?: string
 }
 
-export interface Film {
-  title: string
-  client: string
-  meta: string
-  pa: string
-  pb: string
-  note: string
-  /** YouTube or Vimeo URL (or bare ID), when available. */
-  embed?: string
+/** A photograph in the home page's "Recent frames" strip, captioned from its job. */
+export interface RecentFrame {
+  /** Id of the project in content/projects.ts the photo was taken on. */
+  project: string
+  /** Under public/; ~2000px on the long edge. Nuxt Image serves sized WebP. */
+  src: string
+  alt: string
 }
 
 export interface Capability {

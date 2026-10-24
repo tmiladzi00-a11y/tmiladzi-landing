@@ -11,6 +11,8 @@ export const SITE = {
   youtube: 'https://youtube.com/@tmiladzi',
   linkedin: 'https://www.linkedin.com/in/tsolofelo-miladzi-23b1a5117',
   founder: 'Tsolofelo Miladzi',
+  /** Founder's portrait for the Studio page, under public/ (e.g. '/studio/founder.jpg'). Empty shows a labelled slot. */
+  founderPhoto: '/studio/founder.jpg',
   street: '3 Chitambo Road',
   suburb: 'Riverside',
   city: 'Kitwe',
@@ -27,11 +29,8 @@ export const SITE = {
 /* Page titles, lifted from the prototype's route map. */
 export const TITLES = {
   home: 'Tmiladzi Media',
-  work: 'Work',
-  films: 'Films',
   capabilities: 'Capabilities',
   studio: 'Studio',
-  celebrations: 'Weddings',
   brief: 'Project brief',
   booking: 'Book a date',
   terms: 'Terms of business',
@@ -39,23 +38,18 @@ export const TITLES = {
   commercial: 'Commercial services terms',
   copyright: 'Image use',
   contact: 'Contact',
-  case: 'Case study',
 } as const
 
 export const NAV = [
-  { to: '/work', label: 'Work' },
-  { to: '/films', label: 'Films' },
   { to: '/capabilities', label: 'Capabilities' },
   { to: '/studio', label: 'Studio' },
-  { to: '/celebrations', label: 'Weddings' },
+  { to: '/booking', label: 'Booking' },
 ] as const
 
 export const DRAWER = [
-  { to: '/work', label: 'Work' },
-  { to: '/films', label: 'Films' },
   { to: '/capabilities', label: 'Capabilities' },
   { to: '/studio', label: 'Studio' },
-  { to: '/celebrations', label: 'Weddings & Portraits' },
+  { to: '/booking', label: 'Booking' },
   { to: '/brief', label: 'Start a brief' },
   { to: '/contact', label: 'Contact' },
 ] as const

@@ -133,7 +133,7 @@ since it recomputes every total itself.
 
 Packages (Premium / Basic), their add-ons, the booking page heading, bookable
 hours and the details-form choices can be edited at `/admin`. Data lives in
-Cloudflare D1; `/booking` and `/celebrations` render from it per request via
+Cloudflare D1; `/booking` renders from it per request via
 `/api/catalog`.
 
 ```bash

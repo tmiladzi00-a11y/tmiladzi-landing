@@ -5,18 +5,6 @@ const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } })
 const p = await ctx.newPage()
 const errs = []
 p.on('pageerror', e => errs.push('pageerror: ' + e.message)); p.on('console', m => { if (['error','warning'].includes(m.type())) errs.push(m.type() + ': ' + m.text()) })
-// work filter FLIP
-await p.goto('http://localhost:3210/work', { waitUntil: 'networkidle' })
-await p.getByRole('button', { name: 'Weddings & portraits' }).click(); await p.waitForTimeout(150)
-await p.screenshot({ path: `${S}/shots3/flip-mid.png`, clip: { x: 0, y: 300, width: 1440, height: 700 } })
-await p.waitForTimeout(500); console.log('filtered count', await p.locator('.workgrid .work').count(), 'url', p.url())
-await p.getByRole('button', { name: 'All work' }).click(); await p.waitForTimeout(600); console.log('all count', await p.locator('.workgrid .work').count())
-// case navigation with view transition
-console.log('VT supported', await p.evaluate(() => 'startViewTransition' in document))
-await p.locator('.work').first().click(); await p.waitForTimeout(200)
-await p.screenshot({ path: `${S}/shots3/vt-mid.png` })
-await p.waitForTimeout(800); console.log('case url', p.url(), 'vt name on hero', await p.locator('.plate.ar-21-9').evaluate(e => getComputedStyle(e).viewTransitionName))
-await p.goBack(); await p.waitForTimeout(900); console.log('back url', p.url())
 // wizard: forward/back, odometer, count-up, calendar paging
 await p.goto('http://localhost:3210/booking', { waitUntil: 'networkidle' })
 await p.getByLabel('Photoshoot Sessions', { exact: false }).first().check({ force: true })

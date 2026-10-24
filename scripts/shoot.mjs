@@ -1,8 +1,8 @@
 import { chromium } from 'playwright-core'
 const S = process.argv[2]
 const REF = 'file://' + process.cwd() + '/reference/tmiladzi-com-v2-2.html'
-const ROUTES = [['home','/'],['work','/work'],['case','/work/zambeef-mpongwe'],['films','/films'],['capabilities','/capabilities'],['studio','/studio'],['celebrations','/celebrations'],['brief','/brief'],['contact','/contact'],['booking','/booking'],['terms','/terms'],['privacy','/privacy'],['commercial','/commercial'],['copyright','/copyright']]
-const REFHASH = { home:'#/', work:'#/work', case:'#/case/zambeef-mpongwe', films:'#/films', capabilities:'#/capabilities', studio:'#/studio', celebrations:'#/celebrations', brief:'#/brief', contact:'#/contact', booking:'#/booking', terms:'#/terms', privacy:'#/privacy', commercial:'#/commercial-terms', copyright:'#/copyright' }
+const ROUTES = [['home','/'],['capabilities','/capabilities'],['studio','/studio'],['brief','/brief'],['contact','/contact'],['booking','/booking'],['terms','/terms'],['privacy','/privacy'],['commercial','/commercial'],['copyright','/copyright']]
+const REFHASH = { home:'#/', capabilities:'#/capabilities', studio:'#/studio', brief:'#/brief', contact:'#/contact', booking:'#/booking', terms:'#/terms', privacy:'#/privacy', commercial:'#/commercial-terms', copyright:'#/copyright' }
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 for (const w of [1440, 390]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, deviceScaleFactor: 1, reducedMotion: 'no-preference' })

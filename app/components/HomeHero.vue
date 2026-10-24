@@ -1,32 +1,60 @@
 <script setup lang="ts">
+import { SITE } from '~/content/site'
+
 /* The one orchestrated moment on the site: eyebrow, title, lede and
    actions arrive in sequence on first load. Nothing else on the page
    animates on scroll. */
-const showreelNote = ref(false)
-let timer: ReturnType<typeof setTimeout> | undefined
-function playReel() {
-  showreelNote.value = true
-  clearTimeout(timer)
-  timer = setTimeout(() => { showreelNote.value = false }, 2600)
-}
-onBeforeUnmount(() => clearTimeout(timer))
 
-/* Background film: a minute of the Barloworld golf day, muted and looping.
-   It starts only after the page has rendered, phones get the 540p file, and
-   reduced motion, Save-Data or a slow connection keep the still poster (the
-   visitor can still press play). It pauses while scrolled out of view, and
-   the button pauses it for good: looping motion longer than five seconds
-   needs a way to stop it (WCAG 2.2.2). */
-const FILM = { wide: '/hero/golf-day-720.mp4', narrow: '/hero/golf-day-540.mp4', poster: '/hero/golf-day-poster.webp' }
+/* Background film: 30 seconds of the Barloworld golf day, muted and looping.
+   It starts only after the page has rendered; reduced motion, Save-Data or a
+   slow connection keep the still poster (the visitor can still press play).
+   It pauses while scrolled out of view, and the button pauses it for good:
+   looping motion longer than five seconds needs a way to stop it (WCAG 2.2.2).
+
+   Four encodes, chosen by VMAF against the source (October 2026): AV1 where
+   the browser decodes it smoothly, H.264 everywhere else; 1080p from 900px
+   up, 720p below. Desktop AV1 8.6MB (VMAF 90), H.264 9.0MB (84); phone AV1
+   3.7MB (phone VMAF 93), H.264 4.2MB (88). Lightly denoised before encoding:
+   sensor noise and grass shimmer were costing bits without reading as detail. */
+const FILM = {
+  poster: '/hero/golf-day-poster.webp',
+  av1: { wide: '/hero/golf-day-1080.av1.mp4', narrow: '/hero/golf-day-720.av1.mp4' },
+  h264: { wide: '/hero/golf-day-1080.h264.mp4', narrow: '/hero/golf-day-720.h264.mp4' },
+}
+const AV1 = 'video/mp4; codecs="av01.0.08M.08"'
 const film = ref<HTMLVideoElement | null>(null)
 const playing = ref(false)
 let stopped = false
+let visible = true
 let observer: IntersectionObserver | undefined
+let source: Promise<void> | undefined
 
-function startFilm() {
+/* canPlayType alone says yes to AV1 a slow phone would decode in software and
+   stutter; mediaCapabilities knows whether it will be smooth */
+async function smoothAv1(el: HTMLVideoElement, wide: boolean): Promise<boolean> {
+  if (!el.canPlayType(AV1)) return false
+  if (!navigator.mediaCapabilities) return true
+  try {
+    const r = await navigator.mediaCapabilities.decodingInfo({
+      type: 'file',
+      video: { contentType: AV1, width: wide ? 1920 : 1280, height: wide ? 1080 : 720, bitrate: wide ? 2_400_000 : 1_000_000, framerate: 30 },
+    })
+    return r.supported && r.smooth
+  } catch {
+    return true
+  }
+}
+async function startFilm() {
   const el = film.value
   if (!el) return
-  if (!el.src) el.src = innerWidth < 900 ? FILM.narrow : FILM.wide
+  source ??= (async () => {
+    const wide = innerWidth >= 900
+    const set = (await smoothAv1(el, wide)) ? FILM.av1 : FILM.h264
+    el.src = wide ? set.wide : set.narrow
+  })()
+  await source
+  // the visitor may have paused, or scrolled away, while the source was chosen
+  if (stopped || !visible) return
   el.play().catch(() => {}) // autoplay refused: the poster stays
 }
 function toggleFilm() {
@@ -43,7 +71,8 @@ onMounted(() => {
   stopped = lean || matchMedia('(prefers-reduced-motion: reduce)').matches
   if (!stopped) startFilm()
   observer = new IntersectionObserver(([e]) => {
-    if (!e?.isIntersecting) el.pause()
+    visible = !!e?.isIntersecting
+    if (!visible) el.pause()
     else if (!stopped) startFilm()
   })
   observer.observe(el)
@@ -67,13 +96,12 @@ onBeforeUnmount(() => observer?.disconnect())
       {{ playing ? 'Pause' : 'Play' }}<span class="sr-only"> background video</span>
     </button>
 
-    <div class="reel-slot">
-      <div class="mono reel-slot__meta">
-        Showreel 2026<br><span class="reel-slot__dim">2 min 40 s · 4K</span>
-      </div>
-      <button class="reel-slot__btn" type="button" aria-label="Play the 2026 showreel" @click="playReel">
+    <!-- appears once SITE.showreel holds the published reel's YouTube or Vimeo link -->
+    <div v-if="SITE.showreel" class="reel-slot">
+      <div class="mono reel-slot__meta">Showreel</div>
+      <a class="reel-slot__btn" :href="SITE.showreel" target="_blank" rel="noopener" aria-label="Watch the showreel (opens in a new tab)">
         <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1l14 8-14 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /></svg>
-      </button>
+      </a>
     </div>
 
     <div class="hero__in">
@@ -91,10 +119,6 @@ onBeforeUnmount(() => observer?.disconnect())
         </div>
       </div>
     </div>
-
-    <Transition name="toast">
-      <div v-if="showreelNote" class="mono toast" role="status">Showreel embed slot — drop the YouTube or Vimeo ID here.</div>
-    </Transition>
   </section>
 </template>
 
@@ -151,7 +175,6 @@ onBeforeUnmount(() => observer?.disconnect())
 .reel-slot { position: absolute; z-index: 2; right: var(--tm-sys-space-7); bottom: var(--tm-sys-space-8); display: none; align-items: center; gap: 14px; }
 @media (min-width: 1000px) { .reel-slot { display: flex; } }
 .reel-slot__meta { text-align: right; line-height: 1.5; }
-.reel-slot__dim { color: var(--tm-sys-color-on-surface-faint); }
 .reel-slot__btn {
   width: 62px; height: 62px; border-radius: 50%; border: 1px solid var(--tm-sys-color-primary);
   background: color-mix(in srgb, var(--tm-sys-color-primary) 12%, transparent);
@@ -161,12 +184,4 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 .reel-slot__btn:hover { background: color-mix(in srgb, var(--tm-sys-color-primary) 28%, transparent); transform: scale(1.05); }
 
-.toast {
-  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 99;
-  background: var(--tm-sys-elevation-3-bg); border: 1px solid var(--tm-sys-color-primary-container);
-  padding: 12px 18px; border-radius: var(--tm-sys-shape-corner); color: var(--tm-sys-color-on-surface);
-  white-space: nowrap; max-width: calc(100vw - 32px); white-space: normal; text-align: center;
-}
-.toast-enter-active, .toast-leave-active { transition: opacity var(--tm-sys-motion-duration-short-2) var(--tm-sys-motion-easing-standard), transform var(--tm-sys-motion-duration-short-2) var(--tm-sys-motion-easing-standard); }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 6px); }
 </style>

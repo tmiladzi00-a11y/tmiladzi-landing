@@ -125,7 +125,7 @@ nothing loops. `prefers-reduced-motion` collapses everything to instant in
 `base.css`, and Nuxt skips View Transitions under it.
 
 Deliberate exception, at the studio's request (October 2026): the home hero
-plays a muted, looping minute of drone footage behind the headline
+plays a muted, looping 30 seconds of drone footage behind the headline
 (`HomeHero`, files in `public/hero/`). It carries a visible Pause/Play
 control, pauses when scrolled out of view, and does not start under reduced
 motion, Save-Data or a 2G/3G connection; the poster frame shows instead.

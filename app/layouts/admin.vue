@@ -36,7 +36,13 @@ useHead({ titleTemplate: (t) => (t ? `${t} — Tmiladzi CMS` : 'Tmiladzi CMS'), 
       <p v-else-if="me?.data && !me.data.database" class="err adm__alert" role="alert">
         No CMS database is bound to this deployment, so there is nothing to edit. The site is showing its built-in prices.
       </p>
-      <slot v-else />
+      <template v-else>
+        <p v-if="me?.data && !me.data.mail" class="adm__warn" role="note">
+          Emails are off: no Resend key is reaching the site, so the studio and clients are not being emailed.
+          <NuxtLink to="/admin/settings#mail-h">Check email</NuxtLink>
+        </p>
+        <slot />
+      </template>
     </main>
   </div>
 </template>
@@ -64,5 +70,7 @@ useHead({ titleTemplate: (t) => (t ? `${t} — Tmiladzi CMS` : 'Tmiladzi CMS'), 
 .adm__who { margin-left: auto; font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-sm); color: var(--tm-sys-color-on-surface-faint); }
 .adm__main { max-width: 1280px; margin: 0 auto; padding: var(--tm-sys-space-7) var(--tm-sys-space-5) var(--tm-sys-space-9); }
 .adm__main :deep(.field) { align-content: start; } /* a hint under one field must not shift its neighbour's input */
+.adm__warn { margin: 0 0 var(--tm-sys-space-5); padding: 10px 14px; font-size: 14.5px; border: 1px solid var(--tm-sys-color-secondary-container); border-radius: var(--tm-sys-shape-corner); background: var(--tm-sys-color-secondary-tint); color: var(--tm-sys-color-on-surface); }
+.adm__warn a { color: var(--tm-sys-color-secondary-hover); }
 .adm__alert { padding: var(--tm-sys-space-4); border: 1px solid var(--tm-sys-color-error); border-radius: var(--tm-sys-shape-corner); }
 </style>

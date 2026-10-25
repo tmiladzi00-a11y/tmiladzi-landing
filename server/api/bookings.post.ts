@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const checked = checkBookingRequest(body, catalog, busy)
   if (!checked.ok) {
     const first = Object.values(checked.errors)[0]
-    throw createError({ statusCode: checked.errors.start ? 409 : 422, statusMessage: first, data: checked.errors })
+    throw createError({ statusCode: /taken/.test(checked.errors.start ?? '') ? 409 : 422, statusMessage: first, data: checked.errors })
   }
 
   // references are random; on the rare collision, draw again

@@ -16,7 +16,10 @@ export interface Mail {
   /** For the X-Entity-Ref-ID header, so threads do not merge in the inbox. */
   tag: string
 }
-export type MailResult = { sent: true } | { sent: false; reason: 'not-configured' | 'provider-error' | 'network' }
+export type MailResult =
+  | { sent: true }
+  /** detail: Resend's own explanation, e.g. "The tmiladzi.com domain is not verified" */
+  | { sent: false; reason: 'not-configured' | 'provider-error' | 'network'; detail?: string }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -41,13 +44,16 @@ export async function sendMail(event: H3Event, m: Mail): Promise<MailResult> {
       }),
     })
     if (!r.ok) {
-      console.error('resend failed', r.status, (await r.text().catch(() => '')).slice(0, 300))
-      return { sent: false, reason: 'provider-error' }
+      const body = (await r.text().catch(() => '')).slice(0, 300)
+      console.error('resend failed', r.status, body)
+      let detail = `Resend answered ${r.status}`
+      try { detail = (JSON.parse(body) as { message?: string }).message || detail } catch {}
+      return { sent: false, reason: 'provider-error', detail }
     }
     return { sent: true }
   } catch (e) {
     console.error('mail error', e instanceof Error ? e.message : e)
-    return { sent: false, reason: 'network' }
+    return { sent: false, reason: 'network', detail: e instanceof Error ? e.message : undefined }
   }
 }
 
@@ -55,4 +61,10 @@ export async function sendMail(event: H3Event, m: Mail): Promise<MailResult> {
 export function studioAddress(event: H3Event): string {
   const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
   return useRuntimeConfig(event).mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi00@gmail.com'
+}
+
+/** Whether the site has a Resend key at all, for the admin's email check. */
+export function mailConfigured(event: H3Event): boolean {
+  const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
+  return !!(useRuntimeConfig(event).resendApiKey || cfEnv.NUXT_RESEND_API_KEY)
 }

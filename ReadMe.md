@@ -47,7 +47,7 @@ Variables and Secrets, for Production and Preview):
 | Name | Value |
 |---|---|
 | `NUXT_RESEND_API_KEY` | A [Resend](https://resend.com) API key. Free tier covers this site many times over. Verify `tmiladzi.com` as a sending domain there first. |
-| `NUXT_MAIL_TO` | Where briefs and bookings land. Defaults to `tmiladzi@gmail.com`. |
+| `NUXT_MAIL_TO` | Where briefs and bookings land. Defaults to `tmiladzi00@gmail.com`. |
 | `NUXT_MAIL_FROM` | Sender, e.g. `Tmiladzi site <site@tmiladzi.com>`. Must be on the verified domain. |
 
 Without the key, both forms fall back to copy-and-WhatsApp exactly as before.

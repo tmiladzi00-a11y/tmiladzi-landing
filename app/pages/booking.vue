@@ -8,7 +8,7 @@ useSeoMeta({ title: () => settings.value.title, description: () => settings.valu
    hydration skips inside. */
 const nojs = `<p class="note book__nojs">The booking calendar needs JavaScript. Without it, message
   <a href="https://wa.me/260974901668">+260 974 901 668</a> on WhatsApp or email
-  <a href="mailto:tmiladzi@gmail.com">tmiladzi@gmail.com</a> with the date and the coverage you want.</p>`
+  <a href="mailto:tmiladzi00@gmail.com">tmiladzi00@gmail.com</a> with the date and the coverage you want.</p>`
 </script>
 
 <template>

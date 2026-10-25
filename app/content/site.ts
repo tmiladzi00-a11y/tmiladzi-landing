@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Tmiladzi Media',
   url: 'https://tmiladzi.com',
   description: 'Photography, film and documentary production for organisations that have to prove their impact.',
-  email: 'tmiladzi@gmail.com',
+  email: 'tmiladzi00@gmail.com',
   phone: '+260 974 901 668',
   phoneHref: 'tel:+260974901668',
   whatsapp: 'https://wa.me/260974901668',

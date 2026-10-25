@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     // key the send endpoint answers "not configured" and the forms fall back
     // to copy-and-WhatsApp, exactly as before.
     resendApiKey: '',
-    mailTo: 'tmiladzi@gmail.com',
+    mailTo: 'tmiladzi00@gmail.com',
     mailFrom: 'Tmiladzi site <site@tmiladzi.com>',
     // Cloudflare Zero Trust Access in front of /admin (server/utils/access.ts).
     // Read at build time: the deploy workflow passes the repo variables

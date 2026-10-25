@@ -24,7 +24,7 @@ export async function sendMail(event: H3Event, m: Mail): Promise<MailResult> {
   const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
   const config = useRuntimeConfig(event)
   const apiKey = config.resendApiKey || cfEnv.NUXT_RESEND_API_KEY || ''
-  const studio = config.mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi@gmail.com'
+  const studio = config.mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi00@gmail.com'
   const from = config.mailFrom || cfEnv.NUXT_MAIL_FROM || 'Tmiladzi site <site@tmiladzi.com>'
   if (!apiKey) return { sent: false, reason: 'not-configured' }
 
@@ -54,5 +54,5 @@ export async function sendMail(event: H3Event, m: Mail): Promise<MailResult> {
 /** Studio inbox address, for replies that should come back to the studio. */
 export function studioAddress(event: H3Event): string {
   const cfEnv = (event.context as { cloudflare?: { env?: Record<string, string> } }).cloudflare?.env || {}
-  return useRuntimeConfig(event).mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi@gmail.com'
+  return useRuntimeConfig(event).mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi00@gmail.com'
 }

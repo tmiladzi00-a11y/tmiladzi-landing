@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { studioMs, overlaps, rangeLabel, dayAvailability, bookedRanges, sampleBusy } from '~/utils/availability'
+import { studioMs, overlaps, dayAvailability, bookedRanges, sampleBusy } from '~/utils/availability'
 import { SLOTS, DAY_END } from '~/content/services'
 
 const D = '2026-10-10'
@@ -52,10 +52,6 @@ describe('day states', () => {
     expect(r.taken).toEqual(['07:00', '08:00', '09:00'])
     expect(dayAvailability([], D, SLOTS, studioMs(D, '17:00')).state).toBe('full')
   })
-  it('labels a run', () => {
-    expect(rangeLabel('09:00', '12:00', 3)).toBe('09:00–12:00 · 3 hours')
-    expect(rangeLabel('17:00', '18:00', 1)).toBe('17:00–18:00 · 1 hour')
-  })
 })
 
 describe('booked ranges', () => {
@@ -71,16 +67,5 @@ describe('preview data', () => {
     const b = sampleBusy(new Date(2026, 9, 1))
     expect(b.length).toBeGreaterThan(10)
     for (const x of b) expect(x.e).toBeGreaterThan(x.s)
-  })
-})
-
-describe('public booking address', () => {
-  it('accepts an Apps Script web app and nothing else', async () => {
-    const { appsScriptUrl } = await import('~/composables/useBookingApi')
-    expect(appsScriptUrl('https://script.google.com/macros/s/abc123/exec')).toBe('https://script.google.com/macros/s/abc123/exec')
-    expect(appsScriptUrl('https://calendar.google.com/calendar/ical/someone%40gmail.com/private-xyz/basic.ics')).toBe('')
-    expect(appsScriptUrl('webcal://example.com/cal.ics')).toBe('')
-    expect(appsScriptUrl('')).toBe('')
-    expect(appsScriptUrl(undefined)).toBe('')
   })
 })

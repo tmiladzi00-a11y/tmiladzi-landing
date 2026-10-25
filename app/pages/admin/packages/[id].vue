@@ -97,7 +97,7 @@ const preview = computed<Service>(() => {
     })),
   }
 })
-/* step 3 never lists the extra-hours charge: the wizard adds it from the hours booked */
+/* step 3 never lists the extra-hours charge: the studio sets the length on approval */
 const stepAddons = computed(() => preview.value.addons.filter((a) => a.id !== 'time'))
 const extraHour = computed(() => preview.value.addons.find((a) => a.id === 'time'))
 const money = (n: number | null) => (n == null ? 'On request' : 'K' + fmtMoney(n))
@@ -112,9 +112,8 @@ function moveAddon(i: number, dir: -1 | 1) {
   if (j < 0 || j >= form.addons.length) return
   ;[form.addons[i], form.addons[j]] = [form.addons[j]!, form.addons[i]!]
 }
+/* no question asked: nothing is saved until Save, and leaving unsaved asks first */
 function removeAddon(i: number) {
-  const a = form.addons[i]!
-  if (a.name.trim() && !confirm(`Remove the add-on “${a.name}”?`)) return
   form.addons.splice(i, 1)
 }
 /* the extra-hours charge is always a per-hour quantity */
@@ -170,7 +169,6 @@ async function save(publish: boolean) {
 }
 
 async function remove() {
-  if (!confirm(`Delete “${form.name}”? It disappears from the site immediately and cannot be recovered.`)) return
   const r = await adminCall(`/api/admin/packages/${form.id}`, { method: 'DELETE' })
   if (r.error) { formErr.value = r.error; return }
   clearNuxtData('admin-packages')
@@ -201,7 +199,7 @@ async function remove() {
           <dl class="pv__facts">
             <div><dt>Deposit</dt><dd>{{ Math.round(preview.dep * 100) }}% of the total</dd></div>
             <div><dt>Delivery</dt><dd>{{ preview.delivery }} {{ preview.deliveryUnit }}</dd></div>
-            <div><dt>Extra hours</dt><dd>{{ extraHour ? money(extraHour.price) + ' / hour, added automatically' : 'Not offered' }}</dd></div>
+            <div><dt>Extra hours</dt><dd>{{ extraHour ? money(extraHour.price) + ' / hour' : 'Not offered' }}</dd></div>
           </dl>
         </div>
       </aside>
@@ -308,7 +306,7 @@ async function remove() {
               <input :id="`a${i}-d`" v-model="a.d" placeholder="One line on what the client gets">
             </FormField>
             <div class="ticks">
-              <label class="tick"><input v-model="a.extraHours" type="checkbox" @change="setExtraHours(a)"> This is the extra-hours charge: added automatically when a client books more hours than the package includes</label>
+              <label class="tick"><input v-model="a.extraHours" type="checkbox" @change="setExtraHours(a)"> This is the extra-hours charge: when you accept a booking for longer than the package includes, the extra hours are billed at this price</label>
               <label v-if="!a.extraHours" class="tick"><input v-model="a.delivery" type="checkbox"> Each one bought shortens delivery by one {{ form.deliveryUnit === 'weeks' ? 'week' : 'day' }}</label>
             </div>
           </div>
@@ -329,7 +327,7 @@ async function remove() {
             <BaseButton :disabled="!!saving" @click="save(false)">
               {{ saving === 'draft' ? 'Saving…' : form.published ? 'Move to drafts' : 'Save draft' }}
             </BaseButton>
-            <BaseButton v-if="!isNew" class="del" :disabled="!!saving" @click="remove">Delete</BaseButton>
+            <div v-if="!isNew" class="del"><AdminConfirmButton label="Delete" :question="`Delete “${form.name}”? It disappears from the site immediately and cannot be recovered.`" confirm-label="Yes, delete it" :disabled="!!saving" @confirm="remove" /></div>
           </div>
         </div>
       </form>

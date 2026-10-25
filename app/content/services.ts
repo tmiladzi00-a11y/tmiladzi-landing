@@ -5,10 +5,9 @@ import type { BookingSettings, Service } from './types'
    (scripts/cms-seed.ts) and the fallback when the database is absent or
    empty.
 
-   PRICING lives here and is mirrored in the Apps Script backend. Change
-   both together — the backend recomputes every total from its own copy
-   and ignores whatever the browser sends, so a tampered request cannot
-   lower a price or a deposit.
+   PRICING: the server re-prices every booking request from the catalogue
+   (app/utils/booking.ts) and ignores any total the browser sends, so a
+   tampered request cannot lower a price or a deposit.
 
    Add-on types:
      'qty'    — stepper, priced per unit, up to max

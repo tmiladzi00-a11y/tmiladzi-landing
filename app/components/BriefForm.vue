@@ -8,13 +8,38 @@ const BUDGETS = ['Under 10,000', '10,000 – 30,000', '30,000 – 60,000', '60,0
 const NDA = ['No', 'Yes — NDA', 'Yes — site induction', 'Yes — both']
 const SPEC = ['No, use your standard', 'Yes, we have one']
 
+/* sector, scope and budget start empty: a default nobody changes reads as an
+   answer (and every budget would be "Under 10,000"). NDA and spec keep theirs,
+   since "No" and "your standard" are the usual truth. */
 const f = reactive({
-  org: '', name: '', email: '', phone: '', sector: SECTORS[0]!, scope: SCOPES[0]!,
-  when: '', where: '', budget: BUDGETS[0]!, goal: '', nda: NDA[0]!, spec: SPEC[0]!, consent: false, website: '',
+  org: '', name: '', email: '', phone: '', sector: '', scope: '',
+  when: '', where: '', budget: '', goal: '', nda: NDA[0]!, spec: SPEC[0]!, consent: false, website: '',
 })
-const errors = reactive<{ org?: string; name?: string; email?: string }>({})
 const formErr = ref('')
-const consentBad = ref(false)
+
+/* A field says what is wrong once the visitor leaves it (or presses Send), and
+   the message updates as they type. Send stays greyed out until consent. */
+const touched = reactive(new Set<string>())
+const tried = ref(false)
+const problems = computed(() => {
+  const em = f.email.trim()
+  return {
+    org: f.org.trim() ? undefined : 'Please add your organisation',
+    name: f.name.trim() ? undefined : 'Please add your name',
+    email: !em ? 'Please add your email so we can reply'
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) ? 'That does not look like an email address. Check for a typo.' : undefined,
+    sector: f.sector ? undefined : 'Please choose the closest sector',
+    scope: f.scope ? undefined : 'Please choose what you need made (or "Not sure yet")',
+    budget: f.budget ? undefined : 'Please choose a band (or "Need guidance on budget")',
+  }
+})
+type Field = keyof typeof problems.value
+const fieldErr = (k: Field) => (tried.value || touched.has(k) ? problems.value[k] : undefined)
+function onLeave(e: FocusEvent) {
+  const id = (e.target as HTMLElement | null)?.id ?? ''
+  if (id.startsWith('b-')) touched.add(id.slice(2))
+}
+watch(problems, (p) => { if (Object.values(p).every((x) => !x)) formErr.value = '' })
 /* idle → sending → sent (delivered by the site) | ready (copy-and-send fallback) */
 const state = ref<'idle' | 'sending' | 'sent' | 'ready'>('idle')
 const fallbackReason = ref('')
@@ -50,19 +75,14 @@ function compose() {
 }
 
 async function submit() {
-  errors.org = f.org.trim() ? undefined : 'Required'
-  errors.name = f.name.trim() ? undefined : 'Required'
-  errors.email = !f.email.trim() ? 'Required' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()) ? 'That does not look like an email address' : undefined
-  if (errors.org || errors.name || errors.email) {
-    formErr.value = 'Please add your organisation, your name and a valid email so we can reply.'
+  if (!f.consent) return // the button is disabled; Enter in a field must not get past it either
+  tried.value = true
+  const first = (Object.keys(problems.value) as Field[]).find((k) => problems.value[k])
+  if (first) {
+    formErr.value = 'Please fix the highlighted fields so we can reply to you.'
+    nextTick(() => document.getElementById('b-' + first)?.focus())
     return
   }
-  if (!f.consent) {
-    consentBad.value = true
-    formErr.value = 'Please tick the box so we may hold your details to prepare the proposal.'
-    return
-  }
-  consentBad.value = false
   formErr.value = ''
   text.value = compose()
   state.value = 'sending'
@@ -91,23 +111,23 @@ function edit() {
 </script>
 
 <template>
-  <form ref="formEl" class="form" novalidate @submit.prevent="submit">
+  <form ref="formEl" class="form" novalidate @submit.prevent="submit" @focusout="onLeave">
     <!-- the six questions, as six questions -->
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">01</span>Who you are</legend>
       <FormRow>
-        <FormField id="b-org" label="Organisation" :error="errors.org" required>
+        <FormField id="b-org" label="Organisation" :error="fieldErr('org')" required>
           <input id="b-org" v-model="f.org" name="org" required autocomplete="organization" placeholder="e.g. Barloworld Zambia">
         </FormField>
-        <FormField id="b-name" label="Your name" :error="errors.name" required>
+        <FormField id="b-name" label="Your name" :error="fieldErr('name')" required>
           <input id="b-name" v-model="f.name" name="name" required autocomplete="name" placeholder="Full name">
         </FormField>
       </FormRow>
       <FormRow>
-        <FormField id="b-email" label="Email" :error="errors.email" required>
+        <FormField id="b-email" label="Email" :error="fieldErr('email')" required>
           <input id="b-email" v-model="f.email" name="email" type="email" required autocomplete="email" placeholder="name@company.co.zm">
         </FormField>
-        <FormField id="b-phone" label="Phone or WhatsApp">
+        <FormField id="b-phone" label="Phone or WhatsApp (optional)">
           <input id="b-phone" v-model="f.phone" name="phone" type="tel" autocomplete="tel" placeholder="+260 …">
         </FormField>
       </FormRow>
@@ -115,25 +135,25 @@ function edit() {
 
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">02</span>The sector the work sits in</legend>
-      <FormField id="b-sector" label="Sector">
-        <select id="b-sector" v-model="f.sector" name="sector"><option v-for="o in SECTORS" :key="o">{{ o }}</option></select>
+      <FormField id="b-sector" label="Sector" :error="fieldErr('sector')" required>
+        <select id="b-sector" v-model="f.sector" name="sector"><option value="" disabled>Choose…</option><option v-for="o in SECTORS" :key="o">{{ o }}</option></select>
       </FormField>
     </fieldset>
 
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">03</span>What you need made</legend>
-      <FormField id="b-scope" label="Scope">
-        <select id="b-scope" v-model="f.scope" name="scope"><option v-for="o in SCOPES" :key="o">{{ o }}</option></select>
+      <FormField id="b-scope" label="Scope" :error="fieldErr('scope')" required>
+        <select id="b-scope" v-model="f.scope" name="scope"><option value="" disabled>Choose…</option><option v-for="o in SCOPES" :key="o">{{ o }}</option></select>
       </FormField>
     </fieldset>
 
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">04</span>When, where, and under what conditions</legend>
       <FormRow>
-        <FormField id="b-when" label="Dates or deadline">
+        <FormField id="b-when" label="Dates or deadline (optional)">
           <input id="b-when" v-model="f.when" name="when" placeholder="e.g. mid-October, 3 days">
         </FormField>
-        <FormField id="b-where" label="Location">
+        <FormField id="b-where" label="Location (optional)">
           <input id="b-where" v-model="f.where" name="where" placeholder="e.g. Mpongwe, Copperbelt">
         </FormField>
       </FormRow>
@@ -149,14 +169,14 @@ function edit() {
 
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">05</span>The budget band</legend>
-      <FormField id="b-budget" label="Budget band (ZMW)">
-        <select id="b-budget" v-model="f.budget" name="budget"><option v-for="o in BUDGETS" :key="o">{{ o }}</option></select>
+      <FormField id="b-budget" label="Budget band (ZMW)" :error="fieldErr('budget')" required>
+        <select id="b-budget" v-model="f.budget" name="budget"><option value="" disabled>Choose…</option><option v-for="o in BUDGETS" :key="o">{{ o }}</option></select>
       </FormField>
     </fieldset>
 
     <fieldset class="q">
       <legend class="q__legend"><span class="q__n">06</span>What has to happen because of this work</legend>
-      <FormField id="b-goal" label="Objective">
+      <FormField id="b-goal" label="Objective (optional, but it helps us most)">
         <textarea id="b-goal" v-model="f.goal" name="goal" placeholder="Who is the audience, and what do you need them to understand, believe or do?" />
       </FormField>
     </fieldset>
@@ -164,7 +184,7 @@ function edit() {
     <!-- honeypot: hidden from people, tempting to bots -->
     <div class="hp" aria-hidden="true"><label for="b-website">Website</label><input id="b-website" v-model="f.website" name="website" tabindex="-1" autocomplete="off"></div>
 
-    <AcceptBox id="b-consent" v-model="f.consent" tone="mal" :bad="consentBad">
+    <AcceptBox id="b-consent" v-model="f.consent" tone="mal">
       I have read the <NuxtLink to="/privacy">Privacy Notice</NuxtLink>
       and understand that any quotation will be issued subject to Tmiladzi Media's
       <NuxtLink to="/commercial">Commercial Services Terms</NuxtLink>.
@@ -173,9 +193,10 @@ function edit() {
     <p v-if="formErr" class="err" role="alert">{{ formErr }}</p>
 
     <div v-if="state !== 'sent'" class="row mt-2">
-      <BaseButton variant="primary" type="submit" :disabled="state === 'sending'" arrow>{{ state === 'sending' ? 'Sending…' : 'Send brief' }}</BaseButton>
+      <BaseButton variant="primary" type="submit" :disabled="state === 'sending' || !f.consent" arrow :aria-describedby="f.consent ? undefined : 'consent-needed'">{{ state === 'sending' ? 'Sending…' : 'Send brief' }}</BaseButton>
       <BaseButton :href="SITE.whatsapp" external>Or message on WhatsApp</BaseButton>
     </div>
+    <p v-if="state !== 'sent' && !f.consent" id="consent-needed" class="mono consent-needed">Tick the privacy box above to send.</p>
     <p v-if="state !== 'sent'" class="note">Replies within one working day. Proposals and quotations usually within two.
       Our <NuxtLink to="/terms">terms of business</NuxtLink> apply to
       commissioned work; the licence you get is set out in your quotation.</p>
@@ -205,6 +226,7 @@ function edit() {
 </template>
 
 <style scoped>
+.consent-needed { margin: var(--tm-sys-space-2) 0 0; font-size: var(--tm-sys-type-data-size-sm); color: var(--tm-sys-color-on-surface-faint); }
 .form { display: grid; gap: var(--tm-sys-space-5); }
 .q { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: var(--tm-sys-space-4); }
 .q__legend {

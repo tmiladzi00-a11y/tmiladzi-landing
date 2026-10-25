@@ -89,6 +89,23 @@ export function staticCatalog(): Catalog {
   return { source: 'static', services: SERVICES, settings: BOOKING_DEFAULTS }
 }
 
+/* Published packages and the booking settings, or the built-in catalogue when
+   there is no database, it has no published packages yet, or it cannot be
+   read: a CMS outage degrades to the shipped prices rather than an empty
+   page. The booking API prices requests from this same answer. */
+export async function loadCatalog(db: D1 | null): Promise<Catalog> {
+  if (!db) return staticCatalog()
+  try {
+    const [packages, settings] = await Promise.all([readPackages(db, { publishedOnly: true }), readSettings(db)])
+    if (!packages.length) return { ...staticCatalog(), settings }
+    const services = packages.map(({ published: _p, sort: _s, updatedAt: _u, updatedBy: _b, ...service }) => service)
+    return { source: 'cms', services, settings }
+  } catch (e) {
+    console.error('catalog read failed', e instanceof Error ? e.message : e)
+    return staticCatalog()
+  }
+}
+
 /** 409 when another package already uses this name (any case): two "Weddings" would confuse clients. */
 export async function assertNameFree(db: D1, name: string, exceptId: string): Promise<void> {
   const clash = await db.prepare('SELECT id FROM packages WHERE lower(name) = lower(?1) AND id != ?2').bind(name, exceptId).first()

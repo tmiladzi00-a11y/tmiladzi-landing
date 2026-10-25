@@ -1,11 +1,11 @@
 import { addDays, iso } from '~/utils/dates'
 
 /* Slot logic for the booking calendar. Pure functions over a list of busy
-   intervals (epoch ms) from the studio's calendar. The calendar is the only
-   rule: the studio decides how long each booking runs and blocks that time
-   itself, so the site shows the same thing whichever package is chosen. The
-   day is a row of one-hour blocks; a block is taken when a booking overlaps
-   it (or it has already begun), and a date is full when every block is. */
+   intervals (epoch ms): approved bookings and staff blocks from the bookings
+   database. The studio decides how long each booking runs when it approves
+   it, so the site shows the same thing whichever package is chosen. The day
+   is a row of one-hour start times; one is taken when a booking overlaps its
+   hour (or it has already begun), and a date is full when every one is. */
 
 export interface Busy { s: number; e: number }
 
@@ -31,11 +31,6 @@ export function studioHhmm(ms: number, offsetMin = STUDIO_UTC_OFFSET_MIN): strin
 export function overlaps(busy: Busy[], s: number, e: number): boolean {
   for (const b of busy) if (b.s < e && b.e > s) return true
   return false
-}
-
-/** "09:00–12:00 · 3 hours" */
-export function rangeLabel(start: string, end: string, hours: number): string {
-  return `${start}–${end} · ${hours} hour${hours === 1 ? '' : 's'}`
 }
 
 /** The day's bookings in studio time, clipped to the day: what the calendar shows. */

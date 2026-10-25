@@ -48,6 +48,8 @@ export interface RecentFrame {
   /** Under public/; ~2000px on the long edge. Nuxt Image serves sized WebP. */
   src: string
   alt: string
+  /** Shown instead of the job's title, year and details, e.g. 'Board room'. */
+  caption?: string
 }
 
 export interface Capability {

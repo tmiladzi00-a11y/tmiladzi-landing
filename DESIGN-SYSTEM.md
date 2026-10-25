@@ -395,8 +395,9 @@ animation on the site, and it exists only for the length of the wait.
 `app/composables/useBookingQuote.ts` is pure functions plus a thin reactive
 wrapper, tested in `tests/useBookingQuote.test.ts`. Rates live in
 `app/content/services.ts` with the rationale from the prototype above them.
-Change a rate there, and only there; the Apps Script backend recomputes
-every total from its own copy.
+With the CMS database bound, rates are edited in `/admin` instead and that
+file is only the seed and fallback. Either way the server re-prices every
+booking request (`app/utils/booking.ts`) and ignores the browser's total.
 
 ## 10. Content model
 

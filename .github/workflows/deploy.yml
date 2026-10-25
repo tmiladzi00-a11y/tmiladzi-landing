@@ -6,7 +6,6 @@
 #   secrets.CLOUDFLARE_API_TOKEN     token with "Cloudflare Pages: Edit"
 #   secrets.CLOUDFLARE_ACCOUNT_ID    the account the Pages project lives in
 #   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
-#   secrets.NUXT_PUBLIC_BOOKING_API  optional Apps Script /exec URL for submissions; blank = /api/send
 #   vars.NUXT_ACCESS_TEAM_DOMAIN     Cloudflare Access team, e.g. xxx.cloudflareaccess.com (admin sign-in)
 #   vars.NUXT_ACCESS_AUD             the Access application's Audience (AUD) tag (admin sign-in)
 #   vars.CLOUDFLARE_D1_DATABASE_ID   id of the tmiladzi-cms D1 database; blank = no CMS, built-in prices
@@ -80,7 +79,6 @@ jobs:
       - name: Build
         run: bun run build
         env:
-          NUXT_PUBLIC_BOOKING_API: ${{ secrets.NUXT_PUBLIC_BOOKING_API }}
           NUXT_PUBLIC_SITE_URL: https://tmiladzi.com
           NUXT_ACCESS_TEAM_DOMAIN: ${{ vars.NUXT_ACCESS_TEAM_DOMAIN || secrets.NUXT_ACCESS_TEAM_DOMAIN }}
           NUXT_ACCESS_AUD: ${{ vars.NUXT_ACCESS_AUD || secrets.NUXT_ACCESS_AUD }}

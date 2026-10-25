@@ -7,13 +7,14 @@ const errs = []
 p.on('pageerror', e => errs.push('pageerror: ' + e.message)); p.on('console', m => { if (['error','warning'].includes(m.type())) errs.push(m.type() + ': ' + m.text()) })
 // wizard: forward/back, odometer, count-up, calendar paging
 await p.goto('http://localhost:3210/booking', { waitUntil: 'networkidle' })
+await p.locator('.range__opt', { hasText: 'Basic' }).click() // the switch opens on Premium
 await p.getByLabel('Photoshoot Sessions', { exact: false }).first().check({ force: true })
 await p.getByRole('button', { name: 'Choose a date' }).click(); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Next month' }).click(); await p.waitForTimeout(120)
 await p.screenshot({ path: `${S}/shots3/cal-mid.png`, clip: { x: 0, y: 200, width: 900, height: 700 } })
 await p.waitForTimeout(400); console.log('month', await p.locator('.calmonth').textContent())
 await p.locator('button.calday:not([disabled])').first().click()
-await p.getByLabel('09:00').check({ force: true })
+await p.getByRole('button', { name: 'Start at 09:00' }).click()
 await p.getByRole('button', { name: 'Add-ons' }).click(); await p.waitForTimeout(500)
 for (let i = 0; i < 5; i++) await p.getByRole('button', { name: 'More Additional photo' }).click()
 await p.waitForTimeout(80); await p.screenshot({ path: `${S}/shots3/odo-mid.png`, clip: { x: 0, y: 400, width: 1440, height: 500 } })

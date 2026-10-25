@@ -24,10 +24,6 @@ export default defineNuxtConfig({
     resendApiKey: '',
     mailTo: 'tmiladzi@gmail.com',
     mailFrom: 'Tmiladzi site <site@tmiladzi.com>',
-    // Private iCal address of the studio's bookings calendar
-    // (NUXT_CALENDAR_ICS_URL). The booking page reads live availability from
-    // it; blank means preview mode on sample data.
-    calendarIcsUrl: '',
     // Cloudflare Zero Trust Access in front of /admin (server/utils/access.ts).
     // Read at build time: the deploy workflow passes the repo variables
     // NUXT_ACCESS_TEAM_DOMAIN and NUXT_ACCESS_AUD in, because Pages drops
@@ -37,9 +33,6 @@ export default defineNuxtConfig({
     accessTeamDomain: process.env.NUXT_ACCESS_TEAM_DOMAIN || '',
     accessAud: process.env.NUXT_ACCESS_AUD || '',
     public: {
-      // Optional Google Apps Script /exec URL for booking submissions. Empty
-      // means requests go through the site's own /api/send.
-      bookingApi: '',
       siteUrl: 'https://tmiladzi.com',
     },
   },

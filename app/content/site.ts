@@ -7,6 +7,9 @@ export const SITE = {
   phoneHref: 'tel:+260974901668',
   whatsapp: 'https://wa.me/260974901668',
   whatsappDisplay: 'wa.me/260974901668',
+  /** Where booking deposits are paid. network: 'Airtel', 'MTN' or 'Zamtel'; name: the registered account
+      name. Both print beside the number once filled in. */
+  momo: { number: '0974 901 668', name: '', network: '' },
   instagram: 'https://instagram.com/tmiladzi',
   youtube: 'https://youtube.com/@tmiladzi',
   linkedin: 'https://www.linkedin.com/in/tsolofelo-miladzi-23b1a5117',

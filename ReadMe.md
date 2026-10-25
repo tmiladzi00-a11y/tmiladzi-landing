@@ -35,7 +35,6 @@ Repository settings it needs:
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | API token with the "Cloudflare Pages: Edit" permission |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | The account that owns the Pages project |
-| Secret | `NUXT_PUBLIC_BOOKING_API` | Optional Apps Script `/exec` URL for submissions; unset means `/api/send` |
 | Variable | `CLOUDFLARE_PAGES_PROJECT` | Pages project name; defaults to `tmiladzi` if unset |
 | Variable | `NUXT_ACCESS_TEAM_DOMAIN` | Cloudflare Access team for admin sign-in, e.g. `xxx.cloudflareaccess.com` |
 | Variable | `NUXT_ACCESS_AUD` | The Access application's Application Audience (AUD) tag |
@@ -58,76 +57,41 @@ Create, Pages, "Direct Upload") with that name, then attach the custom
 domain there. `public/_headers` sets long-lived caching for hashed assets
 and fonts plus the security headers; Cloudflare reads it from the output.
 
-## Live availability from the studio calendar
+## Bookings
 
-The booking page shows what is actually free by reading the photographer's
-own calendar. Nothing is written back: a request comes in, the conversation
-happens offline, the photographer adds the booking to the calendar, and the
-site shows that time as taken on the next load (within two minutes).
+Bookings live in the CMS database, not in a calendar.
 
-One-time setup, about five minutes, free:
+1. A client picks a package, a date and a **start time** on `/booking`. Any
+   hour not already taken can be picked; how long the session runs is the
+   studio's decision.
+2. Sending stores a **pending** booking (`POST /api/bookings`) with
+   everything the client entered and a reference such as `TM-7KQ2PX`. The
+   server re-prices it from the catalogue and ignores any total the browser
+   sends. The studio is emailed a link to it, and the client gets a receipt
+   with their reference and the deposit details.
+3. In `/admin/bookings` staff **accept** it, setting the start and the number
+   of hours, or **decline** it. Hours beyond the package's own are billed at
+   its extra-hours price. Accepting takes that time off the calendar;
+   pending and declined requests take nothing. The client is emailed either
+   way, with the deposit's mobile money details on acceptance.
+4. **Deposits:** an accepted booking is held 72 hours. Staff press **Mark
+   deposit received** when the mobile money arrives; the **Awaiting deposit**
+   tab lists the rest, and those past the hold turn red (here and on the
+   menu badge). Pages cannot run scheduled jobs, so nothing is sent
+   automatically: the booking page has a one-tap WhatsApp reminder.
+5. **Block time** in the same screen covers phone bookings and days off.
+6. The **Calendar** tab (the default) shows the month at a glance: confirmed
+   bookings, waiting requests and blocked time in their own colours. Pick a
+   day for its schedule, with links to each booking.
 
-1. In Google Calendar create a calendar just for bookings, e.g. "Tmiladzi
-   bookings" (left sidebar, **+** next to Other calendars, Create new
-   calendar). A dedicated calendar keeps things simple, though personal
-   items can share it: only events shown as **Busy** block time (see below).
-2. Open that calendar's settings, scroll to **Integrate calendar**, and copy
-   **Secret address in iCal format**. Treat it like a password.
-3. In Cloudflare: Workers & Pages, the project, Settings, Variables and
-   Secrets. Add `NUXT_CALENDAR_ICS_URL` as a **secret** with that address,
-   for Production and Preview. Redeploy.
-
-Apple Calendar and Outlook work the same way with their published iCal
-links. Several calendars can be combined by separating the addresses with
-commas. For local development put the same variable in `.env`.
-
-How bookings read on the site:
-
-| On the calendar | On the site |
-|---|---|
-| Timed event, e.g. Sat 09:00–12:00 | The hours it touches (09:00, 10:00, 11:00) are crossed out; the date gets a copper corner and the rest of the day stays bookable |
-| All-day event set to **Busy** | That date is fully booked |
-| Any event set to **Free** (birthdays, notes, reminders) | Ignored: the time stays open |
-| Repeating event | Every Busy occurrence blocks its time |
-| Cancelled or deleted event | Free again |
-| Task (Google Tasks, reminders) | Never reaches the site: calendar feeds export events only |
-
-In Google Calendar, Busy / Free is the **Show as** setting on an event.
-Timed events are Busy by default, **all-day events are Free by default**: to
-hold a whole day for a shoot, open the all-day event and set Show as to
-Busy.
-
-The calendar is the only rule, and every package sees the same thing. The
-bookable day is a row of one-hour blocks from 07:00 to 18:00. A block is
-crossed out when an event on the calendar overlaps it, and a date is fully
-booked when every block is. Past dates and hours that have already begun
-today cannot be picked. The selected date lists its booked times.
-
-The visitor taps a first hour and a last hour: any run of open hours, of any
-length from one hour, is a booking, and a run cannot cross a booked hour.
-Hours beyond what the package includes are added to the quote as its
-"Additional time" at the package's hourly rate; a shorter run keeps the
-package price. To hold a whole day, add an all-day event; to leave travel or
-set-up time, make the event longer. The hours are in
-`app/content/services.ts` (`SLOTS`, `DAY_END`), the rule in
-`app/utils/availability.ts`.
-
-Only start and end times leave the worker. Event titles, names and
-locations are never sent to a visitor's browser.
-
-If the calendar cannot be reached, the page says so and shows every date
-as open, to be confirmed by reply. With no address configured it runs on
-sample data with a "Preview mode" notice. `scripts/availability-check.mjs`
-walks the wizard against whichever calendar the dev server is pointed at.
-
-## Booking submissions
-
-Booking requests are emailed through `/api/send` (see Deploy). An optional
-Google Apps Script web app can take them instead: set
-`NUXT_PUBLIC_BOOKING_API` to its `/exec` URL. Either way a request produces a
-reference and a copy-to-WhatsApp fallback. Rates live in
-`app/content/services.ts`; if an Apps Script is used it must mirror them,
-since it recomputes every total itself.
+Every email is HTML in the site's look (dark header, light body) with a
+plain-text copy: the layout is `server/utils/emailLayout.ts`, the wording
+`server/utils/bookingMail.ts`. Mobile money details for the deposit are `SITE.momo` in
+`app/content/site.ts`; set the registered `name` and `network` there and
+they print in every booking message and email. Emails need
+`NUXT_RESEND_API_KEY` (see Deploy); without it nothing is lost, the request
+is still stored and the admin says the email could not be sent. With no
+database bound, the booking page falls back to emailing the request.
 
 ## CMS (proof of concept, local only)
 
@@ -175,7 +139,7 @@ npm run cms:reset    # wipe local edits back to the seed
 | `tests/` | Vitest |
 | `scripts/serve-static.mjs` | Gzip static server for `dist/` on port 3211, for Lighthouse |
 | `scripts/font-fallbacks.mjs` | Regenerates the metric-matched fallback `@font-face` rules in `fonts.css` |
-| `scripts/motion-check.mjs` | Drives every interaction (filter, case-study morph, wizard, calendar, rail) against the dev server on 3210 and reports console errors |
+| `scripts/motion-check.mjs` | Drives the wizard, calendar, terms contents and mobile menu against the dev server on 3210 and reports console errors |
 | `scripts/shoot.mjs` | Screenshots every route at 1440 and 390 next to the prototype, and walks the wizard. `node scripts/shoot.mjs <outdir>` with the dev server on port 3210 |
 
 ## Client logos

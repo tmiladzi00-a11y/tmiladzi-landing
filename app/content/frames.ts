@@ -4,6 +4,7 @@ import type { RecentFrame } from './types'
    order they scroll. Several may come from one job; each borrows its
    caption (title, year, kind, place, sector tag) from that job in
    projects.ts, so the job must be cleared for its client to be named.
+   A frame's own `caption` replaces the job's title, year and details.
    Files are in public/frames/, prepared at ~2000px and JPEG quality 80
    with camera metadata removed. */
 export const RECENT_FRAMES: RecentFrame[] = [
@@ -17,8 +18,8 @@ export const RECENT_FRAMES: RecentFrame[] = [
     alt: 'Two health workers in hair nets and gloves carrying out a procedure in a clinic room' },
   { project: 'novatek-production', src: '/frames/novatek-bagging-line.jpg',
     alt: 'A Novatek worker in a hair net laughing on the bagging line behind a filled Broiler Grower sack' },
-  { project: 'mingomba-exploration', src: '/frames/mingomba-briefing.jpg',
+  { project: 'mingomba-exploration', src: '/frames/mingomba-briefing.jpg', caption: 'Board room',
     alt: 'A KoBold Metals geologist presenting to visitors in high-visibility vests around a boardroom table' },
-  { project: 'novatek-production', src: '/frames/novatek-feedlot.jpg',
+  { project: 'novatek-production', src: '/frames/novatek-feedlot.jpg', caption: 'Standing orders',
     alt: 'A smiling woman in a Novatek and Zambeef shirt, arms folded, at a cattle feedlot' },
 ]

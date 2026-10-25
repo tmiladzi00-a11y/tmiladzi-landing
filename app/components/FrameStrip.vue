@@ -18,8 +18,8 @@ defineExpose({ page })
     <div ref="strip" class="strip" role="list" aria-label="Recent frames" tabindex="0">
       <div v-for="f in frames" :key="f.src" class="strip__item" role="listitem">
         <PlateFrame ratio="3-2" :pa="f.project.pa" :pb="f.project.pb" :src="f.src" :alt="f.alt" :tag="f.project.catLabel" thumb sizes="sm:78vw md:78vw lg:520px" />
-        <div class="strip__cap"><h3 class="h4 h4--tight">{{ f.project.title }}</h3><span class="mono">{{ f.project.year }}</span></div>
-        <div class="mono strip__meta">{{ f.project.kind }} · {{ f.project.place }}</div>
+        <div class="strip__cap"><h3 class="h4 h4--tight">{{ f.caption ?? f.project.title }}</h3><span v-if="!f.caption" class="mono">{{ f.project.year }}</span></div>
+        <div v-if="!f.caption" class="mono strip__meta">{{ f.project.kind }} · {{ f.project.place }}</div>
       </div>
     </div>
   </div>

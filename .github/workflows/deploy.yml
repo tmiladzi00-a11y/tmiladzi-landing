@@ -8,6 +8,8 @@
 #   vars.CLOUDFLARE_PAGES_PROJECT    Pages project name (defaults to tmiladzi)
 #   vars.NUXT_ACCESS_TEAM_DOMAIN     Cloudflare Access team, e.g. xxx.cloudflareaccess.com (admin sign-in)
 #   vars.NUXT_ACCESS_AUD             the Access application's Audience (AUD) tag (admin sign-in)
+#   secrets.NUXT_RESEND_API_KEY      optional: copied into the Pages project's encrypted secrets on
+#                                    each production deploy, so emails send (see "Set runtime secrets")
 #   vars.CLOUDFLARE_D1_DATABASE_ID   id of the tmiladzi-cms D1 database; blank = no CMS, built-in prices
 # With the database set, CLOUDFLARE_API_TOKEN also needs "D1: Edit".
 # The NUXT_ACCESS_* and CLOUDFLARE_D1_DATABASE_ID values may be repository
@@ -171,6 +173,21 @@ jobs:
             npx --yes wrangler@4 d1 list || true
             exit 1
           }
+
+      # The Resend key is a real secret, so it is never built into the site:
+      # it is written to the Pages project's encrypted secrets, which the
+      # worker reads at runtime. Keeping it in GitHub means one place to
+      # change it, and it cannot be lost from the dashboard.
+      - name: Set runtime secrets on the Pages project
+        if: github.event_name == 'push'
+        env:
+          RESEND_KEY: ${{ secrets.NUXT_RESEND_API_KEY }}
+        run: |
+          if [ -n "$RESEND_KEY" ]; then
+            printf %s "$RESEND_KEY" | npx --yes wrangler@4 pages secret put NUXT_RESEND_API_KEY --project-name="$PROJECT"
+          else
+            echo "::warning::secrets.NUXT_RESEND_API_KEY is not set: emails send only if the key is set on the Pages project itself"
+          fi
 
       - name: Publish
         id: publish

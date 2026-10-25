@@ -5,12 +5,14 @@ import { TIER_LABEL } from '~/utils/catalog'
 const props = defineProps<{ services: Service[]; modelValue: string | null }>()
 defineEmits<{ 'update:modelValue': [id: string] }>()
 
-/* Basic | Premium switch, Basic first. Shown only when both ranges have
-   packages. Coming back to this step opens on the range of the package
-   already chosen; switching range keeps that choice until another is made. */
-const ORDER: Tier[] = ['basic', 'premium']
+/* Premium | Basic switch, Premium first and selected on arrival. Shown only
+   when both ranges have packages. Coming back to this step opens on the range
+   of the package already chosen; switching range keeps that choice until
+   another is made. */
+const ORDER: Tier[] = ['premium', 'basic']
 const tiers = computed(() => ORDER.filter((t) => props.services.some((s) => s.tier === t)))
-const tier = ref<string>(props.services.find((s) => s.id === props.modelValue)?.tier ?? tiers.value[0] ?? 'basic')
+const tier = ref<string>(props.services.find((s) => s.id === props.modelValue)?.tier
+  ?? (tiers.value.includes('premium') ? 'premium' : tiers.value[0]) ?? 'premium')
 const shown = computed(() => (tiers.value.length > 1 ? props.services.filter((s) => s.tier === tier.value) : props.services))
 /* "2 packages · from K2,000": what each side of the switch holds */
 const meta = (t: Tier) => {
@@ -48,9 +50,9 @@ const meta = (t: Tier) => {
 
 <style scoped>
 .pks-fs { border: 0; padding: 0; margin: var(--tm-sys-space-5) 0 0; min-width: 0; }
-/* Basic | Premium: two halves, a thumb that slides to the chosen one.
+/* Premium | Basic: two halves, a thumb that slides to the chosen one.
    Basic rides on the primary green, Premium on the copper, so the range in
-   view is obvious at a glance. Basic always sits left (see ORDER). */
+   view is obvious at a glance. Premium always sits left (see ORDER). */
 .range {
   --_fill: var(--tm-sys-color-primary); --_on: var(--tm-sys-color-on-primary);
   position: relative; display: grid; grid-template-columns: 1fr 1fr; max-width: 560px;
@@ -64,7 +66,7 @@ const meta = (t: Tier) => {
   transition: transform var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-emphasized),
               background var(--tm-sys-motion-duration-medium-1) var(--tm-sys-motion-easing-standard);
 }
-.range--premium .range__thumb { transform: translateX(100%); }
+.range--basic .range__thumb { transform: translateX(100%); }
 .range__opt {
   position: relative; display: grid; gap: 4px; justify-items: center; text-align: center; cursor: pointer;
   padding: var(--tm-sys-space-4) var(--tm-sys-space-3); min-height: 76px; align-content: center;

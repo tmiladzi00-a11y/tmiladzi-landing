@@ -29,7 +29,11 @@ export async function sendMail(event: H3Event, m: Mail): Promise<MailResult> {
   const apiKey = config.resendApiKey || cfEnv.NUXT_RESEND_API_KEY || ''
   const studio = config.mailTo || cfEnv.NUXT_MAIL_TO || 'tmiladzi00@gmail.com'
   const from = config.mailFrom || cfEnv.NUXT_MAIL_FROM || 'Tmiladzi site <site@tmiladzi.com>'
-  if (!apiKey) return { sent: false, reason: 'not-configured' }
+  if (!apiKey) {
+    // one line in the Pages log stream, so a silent "no email" has a visible cause
+    console.warn(`mail not sent (${m.tag}): NUXT_RESEND_API_KEY is not set on this deployment`)
+    return { sent: false, reason: 'not-configured' }
+  }
 
   const replyTo = m.replyTo && EMAIL.test(m.replyTo) ? m.replyTo : undefined
   try {

@@ -5,21 +5,22 @@ import { SITE } from '~/content/site'
    actions arrive in sequence on first load. Nothing else on the page
    animates on scroll. */
 
-/* Background film: 30 seconds of the Barloworld golf day, muted and looping.
-   It starts only after the page has rendered; reduced motion, Save-Data or a
-   slow connection keep the still poster (the visitor can still press play).
-   It pauses while scrolled out of view, and the button pauses it for good:
-   looping motion longer than five seconds needs a way to stop it (WCAG 2.2.2).
+/* Background film: the first minute of the field-visit film (web (1).mp4),
+   cut where a shot ends, muted and looping. It starts only after the page has
+   rendered; reduced motion, Save-Data or a slow connection keep the still
+   poster (the visitor can still press play). It pauses while scrolled out of
+   view, and the button pauses it for good: looping motion longer than five
+   seconds needs a way to stop it (WCAG 2.2.2).
 
-   Four encodes, chosen by VMAF against the source (October 2026): AV1 where
+   Four encodes, scored by VMAF against the source (October 2026): AV1 where
    the browser decodes it smoothly, H.264 everywhere else; 1080p from 900px
-   up, 720p below. Desktop AV1 8.6MB (VMAF 90), H.264 9.0MB (84); phone AV1
-   3.7MB (phone VMAF 93), H.264 4.2MB (88). Lightly denoised before encoding:
-   sensor noise and grass shimmer were costing bits without reading as detail. */
+   up, 720p below. Desktop AV1 9.6MB (VMAF 91), H.264 15.6MB (91); phone AV1
+   5.4MB (phone VMAF 94), H.264 7.1MB (92). Not denoised: the source is
+   already a graded web export. Every file stays under Pages' 25MB limit. */
 const FILM = {
-  poster: '/hero/golf-day-poster.webp',
-  av1: { wide: '/hero/golf-day-1080.av1.mp4', narrow: '/hero/golf-day-720.av1.mp4' },
-  h264: { wide: '/hero/golf-day-1080.h264.mp4', narrow: '/hero/golf-day-720.h264.mp4' },
+  poster: '/hero/field-visit-poster.webp',
+  av1: { wide: '/hero/field-visit-1080.av1.mp4', narrow: '/hero/field-visit-720.av1.mp4' },
+  h264: { wide: '/hero/field-visit-1080.h264.mp4', narrow: '/hero/field-visit-720.h264.mp4' },
 }
 const AV1 = 'video/mp4; codecs="av01.0.08M.08"'
 const film = ref<HTMLVideoElement | null>(null)
@@ -37,7 +38,7 @@ async function smoothAv1(el: HTMLVideoElement, wide: boolean): Promise<boolean> 
   try {
     const r = await navigator.mediaCapabilities.decodingInfo({
       type: 'file',
-      video: { contentType: AV1, width: wide ? 1920 : 1280, height: wide ? 1080 : 720, bitrate: wide ? 2_400_000 : 1_000_000, framerate: 30 },
+      video: { contentType: AV1, width: wide ? 1920 : 1280, height: wide ? 1080 : 720, bitrate: wide ? 1_400_000 : 800_000, framerate: 24 },
     })
     return r.supported && r.smooth
   } catch {

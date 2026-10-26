@@ -13,7 +13,7 @@ export async function adminCall<T>(url: string, opts: Parameters<typeof $fetch>[
   }
 }
 
-export interface AdminMe { email: string; database: boolean; mail: boolean; mailTo: string }
+export interface AdminMe { email: string; database: boolean }
 
 export function useAdminMe() {
   return useAsyncData('admin-me', () => adminCall<AdminMe>('/api/admin/me'))

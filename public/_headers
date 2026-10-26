@@ -23,3 +23,6 @@
 
 /hero/*
   Cache-Control: public, max-age=604800
+
+/brand/*
+  Cache-Control: public, max-age=604800

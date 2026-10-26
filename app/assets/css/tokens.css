@@ -167,7 +167,7 @@
   --tm-sys-layout-bleed:      1760px;
   --tm-sys-layout-rail:       var(--tm-ref-rail);
   --tm-sys-layout-touch:      var(--tm-ref-touch);
-  --tm-sys-layout-header-h:   62px;
+  --tm-sys-layout-header-h:   72px;
 
   /* density: default and compact. Compact is opted into by the
      booking wizard's calendar and add-on rows via [data-density]. */

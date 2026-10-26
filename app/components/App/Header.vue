@@ -28,8 +28,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', onKey); document
   <header ref="header" class="nav">
     <div class="nav__in">
       <NuxtLink class="brand" to="/">
-        <span class="brand__mark">TMILADZI</span>
-        <span class="brand__sub">Media&nbsp;·&nbsp;ZM</span>
+        <img class="brand__logo" src="/brand/tmiladzi-logo-reverse.svg" alt="Tmiladzi Media" width="200" height="56">
       </NuxtLink>
       <nav class="nav__links" aria-label="Primary">
         <NuxtLink v-for="n in NAV" :key="n.to" class="nav__link" :to="n.to">{{ n.label }}</NuxtLink>
@@ -64,20 +63,14 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', onKey); document
 }
 .nav__in {
   max-width: var(--tm-sys-layout-maxw); margin: 0 auto;
-  padding: var(--tm-sys-space-3) var(--tm-sys-space-5);
+  padding: var(--tm-sys-space-2) var(--tm-sys-space-5);
   display: flex; align-items: center; gap: var(--tm-sys-space-5);
 }
-@media (min-width: 900px) { .nav__in { padding: var(--tm-sys-space-3) var(--tm-sys-space-7); } }
-.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; flex: none; }
-.brand__mark {
-  font-family: var(--tm-sys-type-display-family);
-  font-variation-settings: var(--tm-sys-type-brand-axes);
-  font-size: 20px; letter-spacing: -.03em;
-}
-.brand__sub {
-  font-family: var(--tm-sys-type-data-family); font-size: 9.5px; letter-spacing: .22em;
-  text-transform: uppercase; color: var(--tm-sys-color-primary-hover);
-}
+@media (min-width: 900px) { .nav__in { padding: var(--tm-sys-space-2) var(--tm-sys-space-7); } }
+/* the logo pack's own file (public/brand), never retyped. 200px is the
+   pack's minimum width for the full logo on screen */
+.brand { display: flex; align-items: center; text-decoration: none; flex: none; }
+.brand__logo { display: block; width: 200px; height: auto; }
 .nav__links { display: none; gap: 2px; margin-left: auto; align-items: center; }
 @media (min-width: 1000px) { .nav__links { display: flex; } }
 .nav__link {

@@ -1,6 +1,7 @@
 import { SITE } from '../../app/content/site'
 
-/* The site's emails as HTML: the dark ink header and wordmark from the site,
+/* The site's emails as HTML: the dark ink header and the logo from the logo
+   pack (public/brand/tmiladzi-logo-email.png, alt text if images are blocked),
    then a light body that every mail app renders faithfully (Outlook and
    Gmail's dark mode mangle fully dark emails). Tables and inline styles only,
    since mail clients ignore most CSS. Web fonts do not load in mail, so the
@@ -94,7 +95,7 @@ export function renderEmail(e: EmailContent): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.page};"><tr><td align="center" style="padding:24px 12px;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;border-collapse:collapse;">
     <tr><td style="background:${C.ink};padding:26px 32px 30px;border-radius:6px 6px 0 0;">
-      <div style="font-family:${SANS};font-size:20px;font-weight:900;letter-spacing:.5px;color:${C.onInk};">TMILADZI <span style="font-family:${MONO};font-size:10px;font-weight:400;letter-spacing:2.4px;color:${C.green};vertical-align:3px;">MEDIA &middot; ZM</span></div>
+      <img src="${esc(SITE.url)}/brand/tmiladzi-logo-email.png" width="180" height="59" alt="Tmiladzi Media" style="display:block;border:0;outline:none;font-family:${SANS};font-size:18px;font-weight:800;color:${C.onInk};">
       <div style="margin-top:28px;font-family:${MONO};font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:${eyebrowColor};">&mdash;&mdash; ${esc(e.eyebrow)}</div>
       <h1 style="margin:10px 0 0;font-family:${SANS};font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.3px;color:${C.onInk};">${esc(e.title)}</h1>
     </td></tr>

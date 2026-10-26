@@ -51,7 +51,11 @@ export default defineNuxtConfig({
         { rel: 'preload', href: '/fonts/ibm-plex-mono-latin-400-normal.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
         { rel: 'preload', href: '/fonts/ibm-plex-mono-latin-500-normal.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
         { rel: 'preload', href: '/fonts/newsreader-latin-full-normal.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
+        // the copper coin from the logo pack; .ico for older browsers and tools
+        { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
       ],
     },
   },
@@ -96,7 +100,7 @@ export default defineNuxtConfig({
       // Static files never wake the worker. Folders are excluded as wildcards:
       // listed file by file, Cloudflare's 100-rule cap was cutting the
       // generated /_ipx images off the list.
-      pages: { routes: { exclude: ['/_ipx/*', '/hero/*', '/frames/*', '/studio/*', '/logos/*', '/fonts/*'] } },
+      pages: { routes: { exclude: ['/_ipx/*', '/brand/*', '/hero/*', '/frames/*', '/studio/*', '/logos/*', '/fonts/*'] } },
       dev: { configPath: 'wrangler.dev.jsonc' },
       wrangler: d1DatabaseId
         ? { d1_databases: [{ binding: 'DB', database_name: 'tmiladzi-cms', database_id: d1DatabaseId }] }

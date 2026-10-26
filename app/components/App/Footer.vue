@@ -24,8 +24,7 @@ const legal = [
       <div class="foot__grid">
         <div class="foot__brand">
           <NuxtLink class="brand" to="/">
-            <span class="brand__mark">TMILADZI</span>
-            <span class="brand__sub">Media&nbsp;·&nbsp;ZM</span>
+            <img class="brand__logo" src="/brand/tmiladzi-logo-reverse.svg" alt="Tmiladzi Media" width="240" height="67" loading="lazy">
           </NuxtLink>
           <p class="muted foot__blurb">
             Photography, film and documentary production for organisations that have to
@@ -82,15 +81,8 @@ const legal = [
   .foot__grid { grid-template-columns: 2fr 1fr 1fr 1.4fr; }
   .foot__brand { grid-column: auto; }
 }
-.brand { display: inline-flex; align-items: baseline; gap: 10px; text-decoration: none; }
-.brand__mark {
-  font-family: var(--tm-sys-type-display-family); font-variation-settings: var(--tm-sys-type-brand-axes);
-  font-size: 20px; letter-spacing: -.03em;
-}
-.brand__sub {
-  font-family: var(--tm-sys-type-data-family); font-size: 9.5px; letter-spacing: .22em;
-  text-transform: uppercase; color: var(--tm-sys-color-primary-hover);
-}
+.brand { display: inline-block; text-decoration: none; }
+.brand__logo { display: block; width: 240px; height: auto; }
 .foot__blurb { font-size: 15px; margin: var(--tm-sys-space-4) 0 0; max-width: 38ch; }
 .foot__social { margin-top: var(--tm-sys-space-5); }
 .foot__h {

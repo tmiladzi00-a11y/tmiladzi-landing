@@ -41,30 +41,6 @@ watch(form, () => { serverErrors.value = {} }, { deep: true })
 onBeforeRouteLeave(() => (dirty.value ? confirm('You have unsaved changes. Leave without saving?') : true))
 useEventListener('beforeunload', (e: BeforeUnloadEvent) => { if (dirty.value) e.preventDefault() })
 
-/* ---------- email: is it switched on, and does it actually send? ---------- */
-const { data: me } = await useAdminMe()
-const testing = ref(false)
-const testResult = ref<{ ok: boolean; text: string } | null>(null)
-async function sendTest() {
-  testing.value = true; testResult.value = null
-  const r = await adminCall<{ to: string; sent: boolean; reason?: string; detail?: string }>('/api/admin/test-email', { method: 'POST' })
-  testing.value = false
-  const d = r.data
-  if (r.error || !d) { testResult.value = { ok: false, text: r.error || 'The test could not be run.' }; return }
-  if (d.sent) { testResult.value = { ok: true, text: `Sent to ${d.to}. Check that inbox, and its spam folder the first time.` }; return }
-  const why = d.detail ?? ''
-  testResult.value = {
-    ok: false,
-    text: d.reason === 'not-configured'
-      ? 'No Resend key is reaching the site. Add NUXT_RESEND_API_KEY as a Secret on the Cloudflare Pages project, then redeploy.'
-      : /domain|verif/i.test(why)
-        ? `Resend refused: ${why}. Finish verifying tmiladzi.com in Resend → Domains (its DNS records go in Cloudflare DNS).`
-        : /api key|unauthori|forbidden/i.test(why)
-          ? `Resend refused the key: ${why}. Create a new key in Resend (Sending access) and replace the secret.`
-          : `Could not send: ${why || d.reason}.`,
-  }
-}
-
 const msg = ref('')
 const formErr = ref('')
 const saving = ref(false)
@@ -142,16 +118,6 @@ async function save() {
       </div>
     </form>
 
-    <section class="sec mail" aria-labelledby="mail-h">
-      <h2 id="mail-h" class="sec__k">Email</h2>
-      <dl class="maild">
-        <div><dt>Sending</dt><dd>{{ me?.data?.mail ? 'Resend key found' : 'Off: no Resend key is reaching the site' }}</dd></div>
-        <div><dt>Studio inbox</dt><dd>{{ me?.data?.mailTo }}</dd></div>
-      </dl>
-      <p class="muted sec__p">Booking requests and briefs go to the studio inbox; clients get their receipts and decisions at the address they gave.</p>
-      <div><BaseButton :disabled="testing" @click="sendTest">{{ testing ? 'Sending…' : 'Send a test email' }}</BaseButton></div>
-      <p v-if="testResult" :class="testResult.ok ? 'mono ok' : 'err'" role="status">{{ testResult.text }}</p>
-    </section>
   </div>
 </template>
 
@@ -166,10 +132,4 @@ async function save() {
 .foot .err, .ok { margin: 0; }
 .ok, .pending { margin: 0; font-size: var(--tm-sys-type-data-size-sm); color: var(--tm-sys-color-primary-hover); }
 .pending { color: var(--tm-sys-color-secondary-hover); }
-.mail { margin-top: var(--tm-sys-space-6); }
-.maild { margin: 0; display: grid; gap: 6px; }
-.maild div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: var(--tm-sys-space-3); font-size: 14.5px; }
-.maild dt { font-family: var(--tm-sys-type-data-family); font-size: var(--tm-sys-type-data-size-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--tm-sys-color-on-surface-faint); padding-top: 3px; }
-.maild dd { margin: 0; overflow-wrap: anywhere; }
-.mail .ok, .mail .err { margin: 0; }
 </style>

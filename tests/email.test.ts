@@ -22,9 +22,10 @@ describe('email layout', () => {
     expect(html).not.toContain('<img src=x')
     expect(html).toContain('&lt;script&gt;')
   })
-  it('carries the wordmark, preheader and footer', () => {
+  it('carries the logo (with alt text), preheader and footer', () => {
     const html = renderEmail({ eyebrow: 'Test', title: 'Hello', preheader: 'Preview line', blocks: [{ p: 'Body' }] })
-    expect(html).toContain('TMILADZI')
+    expect(html).toContain('https://tmiladzi.com/brand/tmiladzi-logo-email.png')
+    expect(html).toContain('alt="Tmiladzi Media"')
     expect(html).toContain('Preview line')
     expect(html).toContain('3 Chitambo Road')
   })
